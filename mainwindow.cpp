@@ -671,6 +671,21 @@ void MainWindow::displayPopularApps() const
 {
     qDebug() << "+++" << __PRETTY_FUNCTION__ << "+++";
 
+    const QString icon_upgradable {"package-installed-outdated"};
+    const QString icon_installed {"package-installed-updated"};
+
+    const QIcon backup_icon_upgradable = QIcon(":/icons/package-installed-outdated.png");
+    const QIcon backup_icon_installed = QIcon(":/icons/package-installed-updated.png");
+
+    bool force_backup_icon = false;
+    if ( QIcon::fromTheme(icon_upgradable, backup_icon_upgradable).name().compare(
+         QIcon::fromTheme(icon_installed, backup_icon_installed).name()) == 0 ) {
+         force_backup_icon = true;
+    }
+    const QIcon qicon_installed = force_backup_icon
+                                ? backup_icon_installed
+                                : QIcon::fromTheme(icon_installed, backup_icon_installed);
+
     QMap<QString, QTreeWidgetItem *> categoryMap;
 
     for (const auto &item : popular_apps) {
@@ -706,10 +721,8 @@ void MainWindow::displayPopularApps() const
         childItem->setData(PopCol::Screenshot, Qt::UserRole, item.screenshot);
         childItem->setData(PopCol::PostUninstall, Qt::UserRole, item.postUninstall);
         childItem->setData(PopCol::PreUninstall, Qt::UserRole, item.preUninstall);
-
         if (checkInstalled(item.uninstallNames)) {
-            childItem->setIcon(PopCol::Check, QIcon::fromTheme("package-installed-updated",
-                                                               QIcon(":/icons/package-installed-updated.png")));
+            childItem->setIcon(PopCol::Check, qicon_installed);
         }
     }
 
@@ -777,6 +790,25 @@ void MainWindow::displayFilteredFP(QStringList list, bool raw)
 void MainWindow::displayPackages()
 {
     qDebug() << "+++" << __PRETTY_FUNCTION__ << "+++";
+
+    const QString icon_upgradable {"package-installed-outdated"};
+    const QString icon_installed {"package-installed-updated"};
+
+    const QIcon backup_icon_upgradable = QIcon(":/icons/package-installed-outdated.png");
+    const QIcon backup_icon_installed = QIcon(":/icons/package-installed-updated.png");
+
+    bool force_backup_icon = false;
+    if ( QIcon::fromTheme(icon_upgradable, backup_icon_upgradable).name().compare(
+         QIcon::fromTheme(icon_installed, backup_icon_installed).name()) == 0 ) {
+         force_backup_icon = true;
+    }
+    const QIcon qicon_upgradable = force_backup_icon
+                                 ? backup_icon_upgradable
+                                 : QIcon::fromTheme(icon_upgradable, backup_icon_upgradable);
+    const QIcon qicon_installed = force_backup_icon
+                                ? backup_icon_installed
+                                : QIcon::fromTheme(icon_installed, backup_icon_installed);
+
     displayPackagesIsRunning = true;
 
     QTreeWidget *newtree {nullptr};
@@ -848,15 +880,13 @@ void MainWindow::displayPackages()
         } else {
             ++inst_count;
             if (installed >= repo_candidate) {
-                (*it)->setIcon(TreeCol::Check, QIcon::fromTheme("package-installed-updated",
-                                                                QIcon(":/icons/package-installed-updated.png")));
+                (*it)->setIcon(TreeCol::Check, qicon_installed);
                 for (int i = 0; i < newtree->columnCount(); ++i) {
                     (*it)->setToolTip(i, tr("Latest version ") + installed.toString() + tr(" already installed"));
                 }
                 (*it)->setData(TreeCol::Status, Qt::UserRole, Status::Installed);
             } else {
-                (*it)->setIcon(TreeCol::Check, QIcon::fromTheme("package-installed-outdated",
-                                                                QIcon(":/icons/package-installed-outdated.png")));
+                (*it)->setIcon(TreeCol::Check, qicon_upgradable);
                 for (int i = 0; i < newtree->columnCount(); ++i) {
                     (*it)->setToolTip(i, tr("Version ") + installed.toString() + tr(" installed"));
                 }
@@ -1935,12 +1965,24 @@ void MainWindow::setIcons() const
 {
     const QString icon_upgradable {"package-installed-outdated"};
     const QIcon backup_icon_upgradable = QIcon(":/icons/package-installed-outdated.png");
-    ui->iconUpgradable->setIcon(QIcon::fromTheme(icon_upgradable, backup_icon_upgradable));
-    ui->iconUpgradable_2->setIcon(ui->iconUpgradable->icon());
-    ui->iconUpgradable_3->setIcon(ui->iconUpgradable->icon());
     const QString icon_installed {"package-installed-updated"};
     const QIcon backup_icon_installed = QIcon(":/icons/package-installed-updated.png");
-    ui->iconInstalledPackages->setIcon(QIcon::fromTheme(icon_installed, backup_icon_installed));
+    bool force_backup_icon = false;
+    if ( QIcon::fromTheme(icon_upgradable, backup_icon_upgradable).name().compare(
+         QIcon::fromTheme(icon_installed, backup_icon_installed).name()) == 0 ) {
+         force_backup_icon = true;
+    }
+    const QIcon qicon_upgradable = force_backup_icon
+                                 ? backup_icon_upgradable
+                                 : QIcon::fromTheme(icon_upgradable, backup_icon_upgradable);
+    const QIcon qicon_installed = force_backup_icon
+                                ? backup_icon_installed
+                                : QIcon::fromTheme(icon_installed, backup_icon_installed);
+
+    ui->iconUpgradable->setIcon(qicon_upgradable);
+    ui->iconUpgradable_2->setIcon(ui->iconUpgradable->icon());
+    ui->iconUpgradable_3->setIcon(ui->iconUpgradable->icon());
+    ui->iconInstalledPackages->setIcon(qicon_installed);
     ui->iconInstalledPackages_2->setIcon(ui->iconInstalledPackages->icon());
     ui->iconInstalledPackages_3->setIcon(ui->iconInstalledPackages->icon());
     ui->iconInstalledPackages_4->setIcon(ui->iconInstalledPackages->icon());

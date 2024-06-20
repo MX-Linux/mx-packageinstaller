@@ -1,3 +1,9 @@
+mx-packageinstaller (24.6.03) mx; urgency=medium
+
+  * Fix: fallback for identical theme icons for installed and upgradable packages
+
+ -- fehlix <fehlix@mxlinux.org>  Thu, 20 Jun 2024 14:39:54 -0400
+
 mx-packageinstaller (24.6.02) mx; urgency=medium
 
   * Add flatpak-verified repo
