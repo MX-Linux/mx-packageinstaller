@@ -1940,7 +1940,7 @@ void MainWindow::setIcons()
     const QIcon theme_icon_upgradable = QIcon::fromTheme(icon_upgradable, backup_icon_upgradable);
     const QIcon theme_icon_installed = QIcon::fromTheme(icon_installed, backup_icon_installed);
 
-    const bool force_backup_icon = (theme_icon_upgradable.cacheKey() == theme_icon_installed.cacheKey());
+    const bool force_backup_icon = (theme_icon_upgradable.name() == theme_icon_installed.name());
 
     qicon_installed = force_backup_icon ? backup_icon_installed : theme_icon_installed;
     qicon_upgradable = force_backup_icon ? backup_icon_upgradable : theme_icon_upgradable;

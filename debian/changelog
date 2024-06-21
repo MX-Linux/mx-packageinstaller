@@ -1,3 +1,9 @@
+mx-packageinstaller (24.6.06) mx; urgency=medium
+
+  * Fix: revert back to property comparison of qicon name() instead of cacheKey()
+
+ -- fehlix <fehlix@mxlinux.org>  Fri, 21 Jun 2024 05:27:32 -0400
+
 mx-packageinstaller (24.6.05) mx; urgency=medium
 
   * Fix: fallback for identical theme icons for installed and upgradable packages
