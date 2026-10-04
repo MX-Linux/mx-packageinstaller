@@ -87,10 +87,14 @@ void ManageRemotes::removeItem()
         return;
     }
 
-    const QString scope = comboRemote->currentText().section(" -- ", 1, 1);
+    // The second remote-list column is the comma-separated Options field: the
+    // installation first, then flags such as no-gpg-verify, oci or disabled.
+    const QString installation = comboRemote->currentText().section(" -- ", 1, 1).section(',', 0, 0);
     QStringList args {"remote-delete", remote};
-    if (!scope.isEmpty()) {
-        args << ("--" + scope);
+    if (installation == QLatin1String("system") || installation == QLatin1String("user")) {
+        args << ("--" + installation);
+    } else if (!installation.isEmpty()) {
+        args << ("--installation=" + installation);
     }
 
     setCursor(QCursor(Qt::BusyCursor));

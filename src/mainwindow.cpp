@@ -1409,6 +1409,14 @@ void MainWindow::checkUncheckItem()
             Qt::CheckState newState = (currentState == Qt::Checked) ? Qt::Unchecked : Qt::Checked;
             flatpakModel->setData(checkIndex, newState, Qt::CheckStateRole);
         }
+    } else if (currentTreeView == ui->treeSnap) {
+        if (snapModel) {
+            QModelIndex sourceIndex = snapProxy->mapToSource(currentIndex);
+            QModelIndex checkIndex = snapModel->index(sourceIndex.row(), SnapCol::Check);
+            Qt::CheckState currentState = static_cast<Qt::CheckState>(checkIndex.data(Qt::CheckStateRole).toInt());
+            Qt::CheckState newState = (currentState == Qt::Checked) ? Qt::Unchecked : Qt::Checked;
+            snapModel->setData(checkIndex, newState, Qt::CheckStateRole);
+        }
     } else {
         // APT trees
         auto *model = getCurrentModel();

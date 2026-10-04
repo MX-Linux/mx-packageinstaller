@@ -65,6 +65,17 @@ QSize CheckableHeaderView::sectionSizeFromContents(int logicalIndex) const {
     return base;
 }
 
+bool CheckableHeaderView::viewportEvent(QEvent *event) {
+    // Horizontal scrolling (setOffset()) only scrolls the viewport's contents and emits
+    // no signal; the box is a child of the header, not of the viewport, so follow the
+    // offset from the repaint that scrolling triggers.
+    if (event->type() == QEvent::Paint && offset() != m_lastOffset) {
+        m_lastOffset = offset();
+        updateCheckboxGeometry();
+    }
+    return QHeaderView::viewportEvent(event);
+}
+
 void CheckableHeaderView::updateCheckboxGeometry() {
     if (!m_box) return;
     if (!m_visible) { m_box->hide(); return; }
@@ -81,5 +92,6 @@ void CheckableHeaderView::updateCheckboxGeometry() {
     int cbx = x + (w - indicatorW) / 2;
     int cby = (h - indicatorH) / 2;
     m_box->setGeometry(cbx, cby, indicatorW, indicatorH);
-    m_box->show();
+    // Hide it while the target section is scrolled out of view.
+    m_box->setVisible(x + w > 0 && x < viewport()->width());
 }
