@@ -21,6 +21,8 @@ private slots:
     void markerIsCreatedAndCommandSucceeds();
     void invalidMarkerPathAbortsBeforeRunningAnything();
     void disallowedCommandIsRejected();
+    void cLocaleOverrideIsAccepted();
+    void otherLocaleOverrideIsRejected();
     void unknownActionIsRejected();
 };
 
@@ -89,6 +91,36 @@ void HelperTest::disallowedCommandIsRejected()
     QVERIFY(process.waitForFinished(10000));
 
     QCOMPARE(process.exitCode(), 127);
+    QVERIFY(QString::fromUtf8(process.readAllStandardError()).contains(QStringLiteral("not allowed")));
+}
+
+// LockFile's apt frontend-lock probe runs "apt-get check" with LANG=C and LC_ALL=C
+// so it can parse apt's message. The helper used to reject both variables, which
+// failed that probe before apt-get ever ran.
+void HelperTest::cLocaleOverrideIsAccepted()
+{
+    QProcess process;
+    process.start(helperBinaryPath(), {"--cancel-on-eof", "exec", "--env", "LANG=C", "--env", "LC_ALL=C", "ps",
+                                       "-e", "--no-headers"});
+    QVERIFY(process.waitForStarted());
+    // Write channel left open on purpose: see markerIsCreatedAndCommandSucceeds().
+    QVERIFY(process.waitForFinished(10000));
+
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(process.exitCode(), 0);
+}
+
+// The locale variables are only allowed with the value the probe needs; anything
+// else (another locale name, or a path to locale data) is rejected before a child
+// is spawned.
+void HelperTest::otherLocaleOverrideIsRejected()
+{
+    QProcess process;
+    process.start(helperBinaryPath(), {"--cancel-on-eof", "exec", "--env", "LC_ALL=/tmp/locale", "ps"});
+    QVERIFY(process.waitForStarted());
+    QVERIFY(process.waitForFinished(10000));
+
+    QCOMPARE(process.exitCode(), 1);
     QVERIFY(QString::fromUtf8(process.readAllStandardError()).contains(QStringLiteral("not allowed")));
 }
 

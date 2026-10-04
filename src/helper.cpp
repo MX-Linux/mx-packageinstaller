@@ -69,10 +69,18 @@ void printError(const QString &message)
     return commands;
 }
 
-[[nodiscard]] bool isAllowedEnvironment(const QString &name)
+// Environment overrides the helper passes on to the commands it runs.
+// DEBIAN_FRONTEND takes any value. The locale variables only take "C": callers use
+// them to get untranslated output they can parse (LockFile's "apt-get check" probe).
+[[nodiscard]] bool isAllowedEnvironment(const QString &name, const QString &value)
 {
-    static const QSet<QString> allowedNames {QStringLiteral("DEBIAN_FRONTEND")};
-    return allowedNames.contains(name);
+    if (name == QLatin1String("DEBIAN_FRONTEND")) {
+        return true;
+    }
+    if (name == QLatin1String("LANG") || name == QLatin1String("LC_ALL")) {
+        return value == QLatin1String("C");
+    }
+    return false;
 }
 
 [[nodiscard]] int runAllowedCommand(const QString &command, const QStringList &commandArgs,
@@ -129,8 +137,8 @@ void printError(const QString &message)
 
         const QString name = assignment.left(separatorIndex);
         const QString value = assignment.mid(separatorIndex + 1);
-        if (!isAllowedEnvironment(name)) {
-            printError(QString("Environment variable is not allowed: %1").arg(name));
+        if (!isAllowedEnvironment(name, value)) {
+            printError(QString("Environment assignment is not allowed: %1").arg(assignment));
             return 1;
         }
         environment.insert(name, value);

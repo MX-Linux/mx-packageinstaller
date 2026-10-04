@@ -29,10 +29,6 @@
 
 #include "cmd.h"
 
-#include <cerrno>
-#include <fcntl.h>
-#include <unistd.h>
-
 namespace {
 
 const QString &pacmanLockPath()
@@ -41,24 +37,12 @@ const QString &pacmanLockPath()
     return path;
 }
 
-// Pacman's lock is a plain lockfile (unlike dpkg's frontend-lock model), so a direct
-// non-blocking lockf() probe tells us in-process whether another instance holds it,
-// with no privilege elevation needed for the common "not locked" case.
+// libalpm holds its lock by creating db.lck (O_CREAT|O_EXCL) and removing it when
+// done; it never takes an fcntl/lockf lock on the file. The file's existence is
+// the lock, exactly as pacman itself treats it.
 bool pacmanDbLocked()
 {
-    if (!QFile::exists(pacmanLockPath())) {
-        return false;
-    }
-
-    QFile lock {pacmanLockPath()};
-    if (!lock.open(QIODevice::ReadWrite)) {
-        // Can't even open it for a probe; assume another process holds it.
-        return true;
-    }
-
-    const int result = lockf(lock.handle(), F_TLOCK, 0);
-    lock.close();
-    return (result == -1 && (errno == EAGAIN || errno == EWOULDBLOCK));
+    return QFile::exists(pacmanLockPath());
 }
 
 } // namespace
@@ -96,5 +80,11 @@ QString LockFile::getLockingProcess() const
     if (!pacmanDbLocked()) {
         return {};
     }
-    return Cmd().lockingProcessAsRoot(pacmanLockPath(), Cmd::QuietMode::Yes);
+    const QString holder = Cmd().lockingProcessAsRoot(pacmanLockPath(), Cmd::QuietMode::Yes);
+    if (!holder.isEmpty() || Cmd::elevationDismissed() || !pacmanDbLocked()) {
+        return holder;
+    }
+    // No process holds db.lck, but pacman still refuses to run while it exists (a lock
+    // left behind by an interrupted pacman), so the database stays locked.
+    return QObject::tr("no running process (stale lock file %1)").arg(pacmanLockPath());
 }
