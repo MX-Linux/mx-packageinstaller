@@ -451,6 +451,7 @@ private:
         PackageFilterProxy *proxy = nullptr;
         QHash<QString, PackageInfo> *list = nullptr;
         QComboBox *filterCombo = nullptr;
+        CheckableHeaderView *header = nullptr;
     };
     // True once either a confirmation dialog was canceled or an elevated call was
     // dismissed anywhere during the current operation. Callers use this to abort
@@ -461,7 +462,10 @@ private:
         operationCanceled = false;
         Cmd::resetElevationDismissed();
     }
+    [[nodiscard]] AptTabContext aptTab(const QTreeView *tree);
     [[nodiscard]] AptTabContext currentAptTab();
+    // Package trees that have an AptTabContext, for code that handles all of them.
+    [[nodiscard]] QList<QTreeView *> aptTrees() const;
     // Whether the current package tab's own filter combo is set to "Autoremovable",
     // i.e. whether Install acts as "Mark keep" there.
     [[nodiscard]] bool currentTabFiltersAutoremovable();
@@ -495,7 +499,12 @@ private:
     void cancelDownload();
     void centerWindow();
     void clearUi();
-    void displayAutoremovable(PackageModel *model);
+    void displayAutoremovable(const QTreeView *tree);
+    void ensureAutoremovableShown(const QTreeView *tree);
+#ifndef PACKAGE_BACKEND_PACMAN
+    void applyPreloadedEnabledList(QHash<QString, PackageInfo> loadedList);
+#endif
+    void updateAutoremovable(PackageModel *model);
     void displayFilteredFP(QStringList list, bool raw = false);
     void displayFlatpaks(bool forceUpdate = false);
     void displayPackages();

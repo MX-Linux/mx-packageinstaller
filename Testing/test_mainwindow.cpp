@@ -80,6 +80,8 @@ private slots:
     void testFlatpakGenerationStaleness();
     void testMarkKeepFollowsCurrentTabFilter();
     void testVersionDialogReturnsClickedRelease();
+    void testHeaderSelectAllChecksVisibleUpgradable();
+    void testListLoadKeepsAutoremovableFilter();
 #ifdef PACKAGE_BACKEND_PACMAN
     void testEnabledReposRenderedWithoutInstalledFlagFlow();
 #endif
@@ -299,6 +301,90 @@ void TestMainWindowAsync::testVersionDialogReturnsClickedRelease()
     };
     QCOMPARE(pick(QStringLiteral("Bookworm")), static_cast<int>(Release::Bookworm));
     QCOMPARE(pick(QStringLiteral("Trixie")), static_cast<int>(Release::Trixie));
+}
+
+// On every package tab the Upgradable filter shows the header checkbox, and toggling
+// it checks exactly that tab's visible upgradable rows. The AUR tab's header used to
+// stay hidden, and its toggle checked nothing (no proxy was looked up for it).
+void TestMainWindowAsync::testHeaderSelectAllChecksVisibleUpgradable()
+{
+    QCommandLineParser parser;
+    setupTestParser(parser);
+    MainWindow window(parser, nullptr, {}, /*testSkipFlatpakPreload=*/true);
+
+    const QVector<PackageData> packages {
+        {.name = "pkg-upgradable-a", .repoVersion = "2", .installedVersion = "1", .status = Status::Upgradable,
+         .fromRepo = true},
+        {.name = "pkg-installed", .repoVersion = "1", .installedVersion = "1", .status = Status::Installed,
+         .fromRepo = true},
+        {.name = "pkg-upgradable-b", .repoVersion = "3", .installedVersion = "2", .status = Status::Upgradable,
+         .fromRepo = true},
+    };
+    const QString upgradable = MainWindow::tr("Upgradable");
+
+    for (QTreeView *tree : window.aptTrees()) {
+        const MainWindow::AptTabContext tab = window.aptTab(tree);
+        QVERIFY(tab.model && tab.proxy && tab.filterCombo && tab.header);
+        tab.model->setPackageData(packages);
+        window.currentTree = tree;
+        {
+            // Set the combo's state without its own filterChanged() round trip.
+            const QSignalBlocker blocker(tab.filterCombo);
+            tab.filterCombo->setCurrentText(upgradable);
+        }
+        window.filterChanged(upgradable);
+        QVERIFY2(tab.header->isCheckboxVisible(), qPrintable(tree->objectName()));
+
+        emit tab.header->toggled(true);
+        QStringList checked = window.changeList;
+        checked.sort();
+        QCOMPARE(checked, QStringList({"pkg-upgradable-a", "pkg-upgradable-b"}));
+    }
+}
+
+// Loading a list resets every status. When the tab is already filtered on
+// Autoremovable (selected before apt's startup preload finished, or before pacman's
+// first load, whose automatic check is skipped), the load must restore those
+// statuses or the filter shows nothing. Unfiltered loads stay lazy.
+void TestMainWindowAsync::testListLoadKeepsAutoremovableFilter()
+{
+    QCommandLineParser parser;
+    setupTestParser(parser);
+    MainWindow window(parser, nullptr, {}, /*testSkipFlatpakPreload=*/true);
+
+    // Let the window's own startup list load land first, so it cannot reset the
+    // model from inside the nested event loop autoremovableCandidates() runs below.
+#ifdef PACKAGE_BACKEND_PACMAN
+    QSignalSpy startupLoaded(&window, &MainWindow::displayPackagesFinished);
+    QTRY_VERIFY_WITH_TIMEOUT(startupLoaded.count() > 0, 60000);
+#else
+    QTRY_VERIFY_WITH_TIMEOUT(window.ui->tabWidget->isTabEnabled(Tab::Test), 60000);
+#endif
+
+    const auto setFilter = [&window](const QString &text) {
+        const QSignalBlocker blocker(window.ui->comboFilterEnabled);
+        window.ui->comboFilterEnabled->setCurrentText(text);
+    };
+    const auto loadList = [&window] {
+#ifdef PACKAGE_BACKEND_PACMAN
+        window.skipInitialAutoremovableCheck = true;
+        window.enabledModel->setPackageData({{.name = "mxpi-test-package", .repoVersion = "1"}});
+        window.displayAutoremovable(window.ui->treeEnabled);
+        QVERIFY(!window.skipInitialAutoremovableCheck);
+#else
+        QHash<QString, PackageInfo> list;
+        list.insert(QStringLiteral("mxpi-test-package"), PackageInfo {QStringLiteral("1"), QString()});
+        window.applyPreloadedEnabledList(list);
+#endif
+    };
+
+    setFilter(MainWindow::tr("All packages"));
+    loadList();
+    QVERIFY(!window.enabledModel->autoremovableKnown());
+
+    setFilter(MainWindow::tr("Autoremovable"));
+    loadList();
+    QVERIFY(window.enabledModel->autoremovableKnown());
 }
 
 #ifdef PACKAGE_BACKEND_PACMAN

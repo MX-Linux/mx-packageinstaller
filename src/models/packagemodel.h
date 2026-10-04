@@ -72,6 +72,9 @@ public:
     [[nodiscard]] int findPackageRow(const QString &name) const;
 
     void setAutoremovable(const QStringList &names);
+    // Whether the Autoremovable statuses reflect a setAutoremovable() call made since
+    // the statuses were last reset (setPackageData()/updateInstalledVersions()/clear()).
+    [[nodiscard]] bool autoremovableKnown() const { return m_autoremovableKnown; }
     void updateInstalledVersions(const QHash<QString, QString> &versions);
 
     void setIcons(const QIcon &installed, const QIcon &upgradable);
@@ -88,4 +91,5 @@ private:
     QIcon m_iconUpgradable;
     int m_countInstalled = 0;
     int m_countUpgradable = 0;
+    bool m_autoremovableKnown = false;
 };

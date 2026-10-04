@@ -37,6 +37,7 @@ private slots:
     // Status tests
     void testCountByStatus();
     void testSetAutoremovable();
+    void testAutoremovableKnownFollowsStatusResets();
     void testUpdateInstalledVersions();
 
     // Model reset tests
@@ -343,6 +344,30 @@ void TestPackageModel::testSetAutoremovable()
     const PackageData *pkg = model.packageAt(1);
     QVERIFY(pkg != nullptr);
     QCOMPARE(pkg->status, Status::Autoremovable);
+}
+
+// The Autoremovable filter computes the statuses on demand when the model reports
+// them unknown, so every path that recomputes statuses must reset that state, and
+// an empty result must still count as computed.
+void TestPackageModel::testAutoremovableKnownFollowsStatusResets()
+{
+    PackageModel model;
+    model.setPackageData(createTestPackages());
+    QVERIFY(!model.autoremovableKnown());
+
+    model.setAutoremovable({});
+    QVERIFY(model.autoremovableKnown());
+
+    model.updateInstalledVersions({});
+    QVERIFY(!model.autoremovableKnown());
+
+    model.setAutoremovable({"firefox"});
+    model.setPackageData(createTestPackages());
+    QVERIFY(!model.autoremovableKnown());
+
+    model.setAutoremovable({"firefox"});
+    model.clear();
+    QVERIFY(!model.autoremovableKnown());
 }
 
 void TestPackageModel::testUpdateInstalledVersions()

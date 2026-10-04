@@ -165,6 +165,7 @@ void PackageModel::setPackageData(const QVector<PackageData> &packages)
     m_nameToRow.reserve(m_packages.size());
     m_countInstalled = 0;
     m_countUpgradable = 0;
+    m_autoremovableKnown = false;
     for (int i = 0; i < m_packages.size(); ++i) {
         m_nameToRow.insert(m_packages.at(i).name, i);
         if (m_packages.at(i).status == Status::Installed) {
@@ -183,6 +184,7 @@ void PackageModel::clear()
     m_nameToRow.clear();
     m_countInstalled = 0;
     m_countUpgradable = 0;
+    m_autoremovableKnown = false;
     endResetModel();
 }
 
@@ -242,6 +244,7 @@ int PackageModel::findPackageRow(const QString &name) const
 
 void PackageModel::setAutoremovable(const QStringList &names)
 {
+    m_autoremovableKnown = true;
     QSet<QString> nameSet(names.begin(), names.end());
     for (int i = 0; i < m_packages.size(); ++i) {
         if (nameSet.contains(m_packages[i].name)) {
@@ -267,6 +270,7 @@ void PackageModel::updateInstalledVersions(const QHash<QString, QString> &versio
     beginResetModel();
     m_countInstalled = 0;
     m_countUpgradable = 0;
+    m_autoremovableKnown = false;
     for (int i = 0; i < m_packages.size(); ++i) {
         PackageData &pkg = m_packages[i];
         auto it = versions.find(pkg.name);

@@ -493,46 +493,7 @@ MainWindow::MainWindow(const QCommandLineParser &argParser, QWidget *parent)
 #endif
         // Set the model on main thread after preload — all member access happens on the GUI thread
         QMetaObject::invokeMethod(
-            this,
-            [this, loadedList = std::move(loadedList)]() mutable {
-                enabledList = std::move(loadedList);
-                if (enabledModel && !enabledList.isEmpty()) {
-                    QVector<PackageData> packages;
-                    packages.reserve(enabledList.size() + installedPackages.size());
-
-                    for (const auto &[name, info] : std::as_const(enabledList).asKeyValueRange()) {
-                        packages.append(createPackageData(name, info.version, info.description));
-                    }
-
-                    for (const auto &[name, info] : std::as_const(installedPackages).asKeyValueRange()) {
-                        if (!enabledList.contains(name)) {
-                            packages.append(createPackageData(name, QString(), info.description));
-                        }
-                    }
-
-                    enabledModel->setPackageData(packages);
-
-                    // Update installed versions
-                    const auto installedVersions = listInstalledVersions();
-                    QHash<QString, QString> versionStrings;
-                    versionStrings.reserve(installedVersions.size());
-                    for (const auto &[name, version] : installedVersions.asKeyValueRange()) {
-                        versionStrings.insert(name, version.toString());
-                    }
-                    enabledModel->updateInstalledVersions(versionStrings);
-
-                    // Ensure enabled tree is sorted after background load
-                    if (enabledProxy) {
-                        enabledProxy->sort(TreeCol::Name, Qt::AscendingOrder);
-                    }
-
-                    // Mark as not dirty since we just loaded it
-                    dirtyEnabledRepos = false;
-                }
-
-                ui->tabWidget->setTabEnabled(Tab::Test, true);
-                ui->tabWidget->setTabEnabled(Tab::Backports, true);
-            },
+            this, [this, loadedList = std::move(loadedList)]() mutable { applyPreloadedEnabledList(std::move(loadedList)); },
             Qt::QueuedConnection);
     });
 #endif
@@ -1834,12 +1795,14 @@ void MainWindow::setProgressDialog()
 
 void MainWindow::setSearchFocus() const
 {
-    static const QMap<int, QLineEdit *> searchBoxMap {{Tab::EnabledRepos, ui->searchBoxEnabled},
-                                                      {Tab::Test, ui->searchBoxMX},
-                                                      {Tab::Backports, ui->searchBoxBP},
-                                                      {Tab::Flatpak, ui->searchBoxFlatpak},
-                                                      {Tab::Snap, ui->searchBoxSnap},
-                                                      {Tab::Popular, ui->searchPopular}};
+    // Not static: the pointers belong to this window's ui (the test suite creates
+    // several MainWindows in one process).
+    const QMap<int, QLineEdit *> searchBoxMap {{Tab::EnabledRepos, ui->searchBoxEnabled},
+                                               {Tab::Test, ui->searchBoxMX},
+                                               {Tab::Backports, ui->searchBoxBP},
+                                               {Tab::Flatpak, ui->searchBoxFlatpak},
+                                               {Tab::Snap, ui->searchBoxSnap},
+                                               {Tab::Popular, ui->searchPopular}};
     const auto index = ui->tabWidget->currentIndex();
     if (auto *searchBox = searchBoxMap.value(index)) {
         searchBox->setFocus();
@@ -2009,9 +1972,9 @@ void MainWindow::displayPackages()
         currentTree->setUpdatesEnabled(true);
     }
 
-    // Bind the model now: callers such as rebuildPackageViews() switch currentTree
+    // Bind the tree now: callers such as rebuildPackageViews() switch currentTree
     // temporarily and restore it before this queued call runs.
-    QMetaObject::invokeMethod(this, [this, model] { displayAutoremovable(model); }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [this, tree = currentTree] { displayAutoremovable(tree); }, Qt::QueuedConnection);
 
     QApplication::restoreOverrideCursor();
 
@@ -2042,41 +2005,125 @@ void MainWindow::handleInstalledPackagesArrived()
 }
 #endif
 
-void MainWindow::displayAutoremovable(PackageModel *model)
+#ifndef PACKAGE_BACKEND_PACMAN
+// GUI-thread half of the constructor's background AptCache preload: fills the
+// Enabled Repos model from the list the worker read.
+void MainWindow::applyPreloadedEnabledList(QHash<QString, PackageInfo> loadedList)
+{
+    enabledList = std::move(loadedList);
+    if (enabledModel && !enabledList.isEmpty()) {
+        QVector<PackageData> packages;
+        packages.reserve(enabledList.size() + installedPackages.size());
+
+        for (const auto &[name, info] : std::as_const(enabledList).asKeyValueRange()) {
+            packages.append(createPackageData(name, info.version, info.description));
+        }
+
+        for (const auto &[name, info] : std::as_const(installedPackages).asKeyValueRange()) {
+            if (!enabledList.contains(name)) {
+                packages.append(createPackageData(name, QString(), info.description));
+            }
+        }
+
+        enabledModel->setPackageData(packages);
+
+        // Update installed versions
+        const auto installedVersions = listInstalledVersions();
+        QHash<QString, QString> versionStrings;
+        versionStrings.reserve(installedVersions.size());
+        for (const auto &[name, version] : installedVersions.asKeyValueRange()) {
+            versionStrings.insert(name, version.toString());
+        }
+        enabledModel->updateInstalledVersions(versionStrings);
+        // Loading reset every status; restore the autoremovable ones if the tab is
+        // already filtered on them.
+        ensureAutoremovableShown(ui->treeEnabled);
+
+        // Ensure enabled tree is sorted after background load
+        if (enabledProxy) {
+            enabledProxy->sort(TreeCol::Name, Qt::AscendingOrder);
+        }
+
+        // Mark as not dirty since we just loaded it
+        dirtyEnabledRepos = false;
+    }
+
+    ui->tabWidget->setTabEnabled(Tab::Test, true);
+    ui->tabWidget->setTabEnabled(Tab::Backports, true);
+}
+#endif
+
+void MainWindow::displayAutoremovable(const QTreeView *tree)
 {
 #ifdef PACKAGE_BACKEND_PACMAN
     if (skipInitialAutoremovableCheck) {
         skipInitialAutoremovableCheck = false;
+        // The skip only saves startup time; a list already shown filtered on
+        // Autoremovable still needs the statuses.
+        ensureAutoremovableShown(tree);
         return;
     }
 #endif
-    const QStringList names = PackageBackend::autoremovableCandidates(cmd);
-
-    ui->pushRemoveAutoremovable->setVisible(!names.isEmpty());
-    if (names.isEmpty()) {
-        return;
+    if (PackageModel *model = aptTab(tree).model) {
+        updateAutoremovable(model);
     }
+}
 
+// Computes the autoremovable statuses of `tree`'s model when its tab is filtered on
+// Autoremovable and a list (re)load left them out of date; otherwise that filter
+// would show nothing until it is selected again.
+void MainWindow::ensureAutoremovableShown(const QTreeView *tree)
+{
+    const AptTabContext tab = aptTab(tree);
+    if (tab.model && tab.filterCombo && tab.filterCombo->currentText() == tr("Autoremovable")
+        && !tab.model->autoremovableKnown()) {
+        updateAutoremovable(tab.model);
+    }
+}
+
+// Recomputes the autoremovable candidates and marks them in `model`. An empty result
+// is applied too, so the model records that its statuses are current.
+void MainWindow::updateAutoremovable(PackageModel *model)
+{
+    const QStringList names = PackageBackend::autoremovableCandidates(cmd);
+    ui->pushRemoveAutoremovable->setVisible(!names.isEmpty());
     model->setAutoremovable(names);
+}
+
+MainWindow::AptTabContext MainWindow::aptTab(const QTreeView *tree)
+{
+    if (tree == nullptr) {
+        return {};
+    }
+    if (tree == ui->treeMXtest) {
+        return {mxtestModel, mxtestProxy, &mxList, ui->comboFilterMX, headerMX};
+    }
+    if (tree == ui->treeBackports) {
+        return {backportsModel, backportsProxy, &backportsList, ui->comboFilterBP, headerBP};
+    }
+    if (tree == ui->treeEnabled) {
+        return {enabledModel, enabledProxy, &enabledList, ui->comboFilterEnabled, headerEnabled};
+    }
+#ifdef PACKAGE_BACKEND_PACMAN
+    if (tree == ui->treeAUR) {
+        return {aurModel, aurProxy, &aurList, ui->comboFilterAUR, headerAUR};
+    }
+#endif
+    return {};
 }
 
 MainWindow::AptTabContext MainWindow::currentAptTab()
 {
-    if (currentTree == ui->treeMXtest) {
-        return {mxtestModel, mxtestProxy, &mxList, ui->comboFilterMX};
-    }
-    if (currentTree == ui->treeBackports) {
-        return {backportsModel, backportsProxy, &backportsList, ui->comboFilterBP};
-    }
-    if (currentTree == ui->treeEnabled) {
-        return {enabledModel, enabledProxy, &enabledList, ui->comboFilterEnabled};
-    }
+    return aptTab(currentTree);
+}
+
+QList<QTreeView *> MainWindow::aptTrees() const
+{
+    QList<QTreeView *> trees {ui->treeEnabled, ui->treeMXtest, ui->treeBackports};
 #ifdef PACKAGE_BACKEND_PACMAN
-    if (currentTree == ui->treeAUR) {
-        return {aurModel, aurProxy, &aurList, ui->comboFilterAUR};
-    }
+    trees.append(ui->treeAUR);
 #endif
-    return {};
+    return trees;
 }
 
 bool MainWindow::currentTabFiltersAutoremovable()
@@ -5255,20 +5302,12 @@ void MainWindow::filterChanged(const QString &arg1)
         ui->checkHideLibsMX->blockSignals(block);
     };
 
-
-
     // Hide and reset all header checkboxes by default
-    if (headerEnabled) {
-        headerEnabled->setCheckboxVisible(false);
-        headerEnabled->setChecked(false);
-    }
-    if (headerMX) {
-        headerMX->setCheckboxVisible(false);
-        headerMX->setChecked(false);
-    }
-    if (headerBP) {
-        headerBP->setCheckboxVisible(false);
-        headerBP->setChecked(false);
+    for (const QTreeView *tree : aptTrees()) {
+        if (CheckableHeaderView *header = aptTab(tree).header) {
+            header->setCheckboxVisible(false);
+            header->setChecked(false);
+        }
     }
 
     bool isAutoremovable = (arg1 == tr("Autoremovable"));
@@ -5340,35 +5379,26 @@ void MainWindow::filterChanged(const QString &arg1)
 
         if (auto itStatus = statusMap.find(arg1); itStatus != statusMap.end()) {
             savedComboIndex = itStatus.value();
-            auto *proxy = getCurrentProxy();
-            if (proxy) {
-                proxy->setStatusFilter(itStatus.value());
+            const AptTabContext tab = currentAptTab();
+            // Loading a list resets every status, and not every load recomputes the
+            // autoremovable ones (apt's startup preload, pacman's skipped first check),
+            // so compute them the first time this filter needs them.
+            if (itStatus.value() == Status::Autoremovable && tab.model && !tab.model->autoremovableKnown()) {
+                updateAutoremovable(tab.model);
             }
-            bool hasVisibleMatches = proxy ? proxy->rowCount() > 0 : false;
+            if (tab.proxy) {
+                tab.proxy->setStatusFilter(itStatus.value());
+            }
+            bool hasVisibleMatches = tab.proxy ? tab.proxy->rowCount() > 0 : false;
             // Show the header checkbox when filtering Upgradable or Autoremovable
-            if (itStatus.value() == Status::Upgradable || itStatus.value() == Status::Autoremovable) {
+            if (tab.header && (itStatus.value() == Status::Upgradable || itStatus.value() == Status::Autoremovable)) {
                 const QString tip = (itStatus.value() == Status::Upgradable) ? tr("Select/deselect all upgradable")
                                                                              : tr("Select/deselect all autoremovable");
                 const bool allowAutoremovableCheckbox = itStatus.value() != Status::Autoremovable || hasVisibleMatches;
-
-                if (currentTree == ui->treeEnabled && headerEnabled) {
-                    headerEnabled->setCheckboxVisible(allowAutoremovableCheckbox);
-                    if (allowAutoremovableCheckbox) {
-                        headerEnabled->setToolTip(tip);
-                        headerEnabled->resizeSection(TreeCol::Check, qMax(headerEnabled->sectionSize(0), 22));
-                    }
-                } else if (currentTree == ui->treeMXtest && headerMX) {
-                    headerMX->setCheckboxVisible(allowAutoremovableCheckbox);
-                    if (allowAutoremovableCheckbox) {
-                        headerMX->setToolTip(tip);
-                        headerMX->resizeSection(TreeCol::Check, qMax(headerMX->sectionSize(0), 22));
-                    }
-                } else if (currentTree == ui->treeBackports && headerBP) {
-                    headerBP->setCheckboxVisible(allowAutoremovableCheckbox);
-                    if (allowAutoremovableCheckbox) {
-                        headerBP->setToolTip(tip);
-                        headerBP->resizeSection(TreeCol::Check, qMax(headerBP->sectionSize(0), 22));
-                    }
+                tab.header->setCheckboxVisible(allowAutoremovableCheckbox);
+                if (allowAutoremovableCheckbox) {
+                    tab.header->setToolTip(tip);
+                    tab.header->resizeSection(TreeCol::Check, qMax(tab.header->sectionSize(0), 22));
                 }
             }
         }
@@ -5382,75 +5412,45 @@ void MainWindow::filterChanged(const QString &arg1)
     currentTree->blockSignals(false);
 }
 
-// Toggle selection of all visible upgradable items in the current tab
+// Toggle selection of all visible upgradable (or autoremovable) items in the tab
+// whose header checkbox was clicked
 void MainWindow::selectAllUpgradable_toggled(bool checked)
 {
     QTreeView *tree = nullptr;
-    PackageModel *model = nullptr;
-    QObject *s = sender();
-    if (s == headerEnabled) {
-        tree = ui->treeEnabled;
-        model = enabledModel;
-    } else if (s == headerMX) {
-        tree = ui->treeMXtest;
-        model = mxtestModel;
-    } else if (s == headerBP) {
-        tree = ui->treeBackports;
-        model = backportsModel;
-#ifdef PACKAGE_BACKEND_PACMAN
-    } else if (s == headerAUR) {
-        tree = ui->treeAUR;
-        model = aurModel;
-#endif
-    } else {
+    AptTabContext tab;
+    for (QTreeView *candidate : aptTrees()) {
+        const AptTabContext candidateTab = aptTab(candidate);
+        if (candidateTab.header != nullptr && candidateTab.header == sender()) {
+            tree = candidate;
+            tab = candidateTab;
+            break;
+        }
+    }
+    if (tree == nullptr || tab.model == nullptr || tab.proxy == nullptr) {
         return;
     }
+    PackageModel *model = tab.model;
 
     // Batch update: avoid emitting itemChanged for every item
     tree->setUpdatesEnabled(false);
     tree->blockSignals(true);
-    // Determine desired status based on current filter text
-    int targetStatus = Status::Upgradable;
-    QString filterText;
-    if (tree == ui->treeEnabled) {
-        filterText = ui->comboFilterEnabled->currentText();
-    } else if (tree == ui->treeMXtest) {
-        filterText = ui->comboFilterMX->currentText();
-    } else if (tree == ui->treeBackports) {
-        filterText = ui->comboFilterBP->currentText();
-    }
-    if (filterText == tr("Autoremovable")) {
-        targetStatus = Status::Autoremovable;
-    }
-
-    // Get proxy for the tree to respect filters (search, hide libraries, etc.)
-    PackageFilterProxy *proxy = nullptr;
-    if (tree == ui->treeEnabled) {
-        proxy = enabledProxy;
-    } else if (tree == ui->treeMXtest) {
-        proxy = mxtestProxy;
-    } else if (tree == ui->treeBackports) {
-        proxy = backportsProxy;
-    }
+    // Determine desired status based on this tab's filter
+    const int targetStatus = (tab.filterCombo->currentText() == tr("Autoremovable")) ? Status::Autoremovable
+                                                                                       : Status::Upgradable;
 
     // Only check VISIBLE rows (respecting search and other filters)
-    if (proxy) {
-        QVector<int> visibleRows = proxy->visibleSourceRows();
-        model->setCheckedForVisible(visibleRows, checked);
-    }
+    model->setCheckedForVisible(tab.proxy->visibleSourceRows(), checked);
 
     // Rebuild changeList and update buttons once, instead of per-item
     changeList = model->checkedPackageNames();
 
     // Update action buttons coherently after batch toggle
     ui->pushInstall->setEnabled(!changeList.isEmpty());
-    if (tree != ui->treeFlatpak) {
-        ui->pushUninstall->setEnabled(checkInstalled(changeList));
-        if (targetStatus == Status::Autoremovable) {
-            ui->pushInstall->setText(tr("Mark keep"));
-        } else {
-            ui->pushInstall->setText(checkUpgradable(changeList) ? tr("Upgrade") : tr("Install"));
-        }
+    ui->pushUninstall->setEnabled(checkInstalled(changeList));
+    if (targetStatus == Status::Autoremovable) {
+        ui->pushInstall->setText(tr("Mark keep"));
+    } else {
+        ui->pushInstall->setText(checkUpgradable(changeList) ? tr("Upgrade") : tr("Install"));
     }
 
     tree->blockSignals(false);
