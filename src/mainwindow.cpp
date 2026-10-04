@@ -3565,11 +3565,6 @@ void MainWindow::cleanup()
                       fpUser.startsWith(QLatin1String("--user")) ? QStringLiteral("user") : QStringLiteral("system"));
 }
 
-QString MainWindow::getVersion(const QString &name) const
-{
-    return Cmd().getOut({{"LANG", "C"}}, "dpkg-query", {"-f", "${Version}", "-W", name});
-}
-
 // Return true if all the packages listed are installed
 bool MainWindow::checkInstalled(const QVariant &names) const
 {
@@ -3667,52 +3662,6 @@ QStringList MainWindow::listFlatpaks(const QString &remote, const QString &fpUse
 {
     qDebug() << "+++" << __PRETTY_FUNCTION__ << "+++";
     return listFlatpaksImpl(remote, fpUserScope, getArchOption(), type);
-}
-
-// List installed flatpaks by type: apps, runtimes, or all (if no type is provided)
-QStringList MainWindow::listInstalledFlatpaks(const QString &type)
-{
-    QStringList lines;
-    if (cachedInstalledScope == fpUser && cachedInstalledFetched) {
-        lines = cachedInstalledFlatpaks;
-    } else {
-        QStringList args = flatpakArgsWithScope(fpUser, {"list"});
-        if (!type.isEmpty()) {
-            args << type;
-        }
-        args << QStringLiteral("--columns=ref");
-        QScopedValueRollback<bool> guard(suppressCmdOutput, true);
-        lines = cmd.getOut("flatpak", args, Cmd::QuietMode::No, /*discardStderr=*/true).split('\n', Qt::SkipEmptyParts);
-
-        if (type.isEmpty()) {
-            cachedInstalledFlatpaks = lines;
-            cachedInstalledScope = fpUser;
-            cachedInstalledFetched = true;
-        }
-    }
-
-    QStringList refs;
-    for (const QString &lineRaw : lines) {
-        if (lineRaw.startsWith(QLatin1String("Ref"))) { // skip header if present
-            continue;
-        }
-        const QString line = lineRaw.section('\t', 0, 0);
-
-        const ParsedFlatpakRef parsed = parseInstalledFlatpakLine(line);
-        if (parsed.ref.isEmpty()) {
-            continue;
-        }
-
-        if (type == QLatin1String("--app") && parsed.isRuntime) {
-            continue;
-        }
-        if (type == QLatin1String("--runtime") && !parsed.isRuntime) {
-            continue;
-        }
-
-        refs.append(parsed.ref);
-    }
-    return refs;
 }
 
 PackageData MainWindow::createPackageData(const QString &name, const QString &version,

@@ -431,10 +431,8 @@ private:
     [[nodiscard]] QString getMXTestRepoUrl();
     [[nodiscard]] QString getArchOption() const;
     [[nodiscard]] QString getLocalizedName(const QDomElement &element) const;
-    [[nodiscard]] QString getVersion(const QString &name) const;
     [[nodiscard]] QString mapArchToFormat(const QString &arch) const;
     [[nodiscard]] QStringList listFlatpaks(const QString &remote, const QString &scope, const QString &type = QString()) const;
-    [[nodiscard]] QStringList listInstalledFlatpaks(const QString &type = QString());
     [[nodiscard]] FlatpakData createFlatpakData(const QString &item, const QStringList &installedAll) const;
     [[nodiscard]] PackageData createPackageData(const QString &name, const QString &version,
                                                 const QString &description) const;
