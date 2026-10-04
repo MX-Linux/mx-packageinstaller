@@ -1,3 +1,25 @@
+mx-packageinstaller (26.10) mx; urgency=medium
+
+  * Decide between Install and "Mark keep" from the current tab's own filter
+  * Fill the Autoremovable filter right after startup and after installing
+    or removing popular applications
+  * Make the "select all" header checkbox work on the AUR tab, and hide it
+    while its column is scrolled out of view
+  * Set up Bookworm repositories when Bookworm is chosen in the Debian
+    version prompt
+  * Remove a popular application's temporary repository as soon as its
+    install is cancelled
+  * Detect when apt or pacman is already in use before starting an install
+  * AUR tab: search only the AUR, and show an empty list instead of an error
+    when there is nothing to show
+  * Show the version pacman will install when a testing repository is
+    enabled
+  * Snaps tab: double-click or Space checks a row, and cancelling the
+    password prompt during setup stops the setup
+  * Fix removing Flatpak remotes that have extra options
+
+ -- Adrian <adrian@mxlinux.org>  Sun, 04 Oct 2026 08:19:24 -0400
+
 mx-packageinstaller (26.09) mx; urgency=medium
 
   * Show a description, screenshot, developer, license and homepage for

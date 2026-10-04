@@ -2,12 +2,12 @@
 <context>
     <name>Cmd</name>
     <message>
-        <location filename="../src/cmd.cpp" line="530"/>
+        <location filename="../src/cmd.cpp" line="534"/>
         <source>Administrator Access Required</source>
         <translation>Требуется доступ администратора</translation>
     </message>
     <message>
-        <location filename="../src/cmd.cpp" line="531"/>
+        <location filename="../src/cmd.cpp" line="535"/>
         <source>This operation requires administrator privileges. Try the action again and enter your password when prompted.</source>
         <translation>Эта операция требует прав администратора. Попробуйте выполнить действие снова и введите пароль при появлении запроса.</translation>
     </message>
@@ -15,27 +15,37 @@
 <context>
     <name>FlatpakModel</name>
     <message>
-        <location filename="../src/models/flatpakmodel.cpp" line="158"/>
+        <location filename="../src/models/flatpakmodel.cpp" line="93"/>
+        <source>More info</source>
+        <translation>Подробности</translation>
+    </message>
+    <message>
+        <location filename="../src/models/flatpakmodel.cpp" line="167"/>
         <source>Package</source>
         <translation>Пакет</translation>
     </message>
     <message>
-        <location filename="../src/models/flatpakmodel.cpp" line="160"/>
+        <location filename="../src/models/flatpakmodel.cpp" line="169"/>
+        <source>Info</source>
+        <translation>Информация</translation>
+    </message>
+    <message>
+        <location filename="../src/models/flatpakmodel.cpp" line="171"/>
         <source>Full Name</source>
         <translation>Полное имя</translation>
     </message>
     <message>
-        <location filename="../src/models/flatpakmodel.cpp" line="162"/>
+        <location filename="../src/models/flatpakmodel.cpp" line="173"/>
         <source>Version</source>
         <translation>Версия</translation>
     </message>
     <message>
-        <location filename="../src/models/flatpakmodel.cpp" line="164"/>
+        <location filename="../src/models/flatpakmodel.cpp" line="175"/>
         <source>Branch</source>
         <translation>Ветка</translation>
     </message>
     <message>
-        <location filename="../src/models/flatpakmodel.cpp" line="166"/>
+        <location filename="../src/models/flatpakmodel.cpp" line="177"/>
         <source>Size</source>
         <translation>Размер</translation>
     </message>
@@ -44,7 +54,7 @@
     <name>MainWindow</name>
     <message>
         <location filename="../src/mainwindow.ui" line="20"/>
-        <location filename="../src/mainwindow.cpp" line="822"/>
+        <location filename="../src/mainwindow.cpp" line="785"/>
         <source>MX Package Installer</source>
         <translation>MX Установщик пакетов</translation>
     </message>
@@ -166,7 +176,7 @@
         <location filename="../src/mainwindow.ui" line="1058"/>
         <location filename="../src/mainwindow.ui" line="1388"/>
         <location filename="../src/mainwindow.ui" line="1392"/>
-        <location filename="../src/mainwindow.cpp" line="5901"/>
+        <location filename="../src/mainwindow.cpp" line="5347"/>
         <source>All packages</source>
         <translation>Все пакеты</translation>
     </message>
@@ -175,7 +185,7 @@
         <location filename="../src/mainwindow.ui" line="740"/>
         <location filename="../src/mainwindow.ui" line="1063"/>
         <location filename="../src/mainwindow.ui" line="1397"/>
-        <location filename="../src/mainwindow.cpp" line="5927"/>
+        <location filename="../src/mainwindow.cpp" line="5373"/>
         <source>Installed</source>
         <translation>Установлено</translation>
     </message>
@@ -184,7 +194,7 @@
         <location filename="../src/mainwindow.ui" line="745"/>
         <location filename="../src/mainwindow.ui" line="1068"/>
         <location filename="../src/mainwindow.ui" line="1402"/>
-        <location filename="../src/mainwindow.cpp" line="5928"/>
+        <location filename="../src/mainwindow.cpp" line="5374"/>
         <source>Upgradable</source>
         <translation>Доступно обновление</translation>
     </message>
@@ -194,8 +204,8 @@
         <location filename="../src/mainwindow.ui" line="1073"/>
         <location filename="../src/mainwindow.ui" line="1407"/>
         <location filename="../src/mainwindow.ui" line="1756"/>
-        <location filename="../src/mainwindow.cpp" line="5894"/>
-        <location filename="../src/mainwindow.cpp" line="5929"/>
+        <location filename="../src/mainwindow.cpp" line="5340"/>
+        <location filename="../src/mainwindow.cpp" line="5375"/>
         <source>Not installed</source>
         <translation>Не установлено</translation>
     </message>
@@ -204,11 +214,11 @@
         <location filename="../src/mainwindow.ui" line="755"/>
         <location filename="../src/mainwindow.ui" line="1078"/>
         <location filename="../src/mainwindow.ui" line="1412"/>
-        <location filename="../src/mainwindow.cpp" line="4408"/>
-        <location filename="../src/mainwindow.cpp" line="5865"/>
-        <location filename="../src/mainwindow.cpp" line="5930"/>
-        <location filename="../src/mainwindow.cpp" line="6013"/>
-        <location filename="../src/mainwindow.cpp" line="6104"/>
+        <location filename="../src/mainwindow.cpp" line="4513"/>
+        <location filename="../src/mainwindow.cpp" line="5311"/>
+        <location filename="../src/mainwindow.cpp" line="5376"/>
+        <location filename="../src/mainwindow.cpp" line="5459"/>
+        <location filename="../src/mainwindow.cpp" line="5550"/>
         <source>Autoremovable</source>
         <translation>Автоудаляемый</translation>
     </message>
@@ -254,37 +264,37 @@
     <message>
         <location filename="../src/mainwindow.ui" line="1722"/>
         <location filename="../src/mainwindow.ui" line="1726"/>
-        <location filename="../src/mainwindow.cpp" line="5876"/>
+        <location filename="../src/mainwindow.cpp" line="5322"/>
         <source>All apps</source>
         <translation>Все приложения</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1731"/>
-        <location filename="../src/mainwindow.cpp" line="5882"/>
+        <location filename="../src/mainwindow.cpp" line="5328"/>
         <source>All runtimes</source>
         <translation>Все среды выполнения</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1736"/>
-        <location filename="../src/mainwindow.cpp" line="5888"/>
+        <location filename="../src/mainwindow.cpp" line="5334"/>
         <source>All available</source>
         <translation>Все доступные</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1741"/>
-        <location filename="../src/mainwindow.cpp" line="5873"/>
+        <location filename="../src/mainwindow.cpp" line="5319"/>
         <source>Installed apps</source>
         <translation>Установленные приложения</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1746"/>
-        <location filename="../src/mainwindow.cpp" line="5870"/>
+        <location filename="../src/mainwindow.cpp" line="5316"/>
         <source>Installed runtimes</source>
         <translation>Установленные среды выполнения</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1751"/>
-        <location filename="../src/mainwindow.cpp" line="5892"/>
+        <location filename="../src/mainwindow.cpp" line="5338"/>
         <source>All installed</source>
         <translation>Все установленные</translation>
     </message>
@@ -351,17 +361,17 @@
     <message>
         <location filename="../src/mainwindow.ui" line="1819"/>
         <location filename="../src/mainwindow.ui" line="1823"/>
-        <location filename="../src/mainwindow.cpp" line="5451"/>
-        <location filename="../src/mainwindow.cpp" line="5681"/>
+        <location filename="../src/mainwindow_snap.cpp" line="234"/>
+        <location filename="../src/mainwindow_snap.cpp" line="310"/>
         <source>Installed snaps</source>
         <translation>Установленные пакеты Snap</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="1828"/>
-        <location filename="../src/mainwindow.cpp" line="5366"/>
-        <location filename="../src/mainwindow.cpp" line="5454"/>
-        <location filename="../src/mainwindow.cpp" line="5456"/>
-        <location filename="../src/mainwindow.cpp" line="5751"/>
+        <location filename="../src/mainwindow.cpp" line="5197"/>
+        <location filename="../src/mainwindow_snap.cpp" line="149"/>
+        <location filename="../src/mainwindow_snap.cpp" line="237"/>
+        <location filename="../src/mainwindow_snap.cpp" line="239"/>
         <source>Search store</source>
         <translation>Поиск в магазине</translation>
     </message>
@@ -392,8 +402,8 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="2005"/>
-        <location filename="../src/mainwindow.cpp" line="4657"/>
-        <location filename="../src/mainwindow.cpp" line="5231"/>
+        <location filename="../src/mainwindow.cpp" line="4762"/>
+        <location filename="../src/mainwindow.cpp" line="5153"/>
         <source>Console Output</source>
         <translation>Вывод консоли</translation>
     </message>
@@ -409,14 +419,14 @@
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="2080"/>
-        <location filename="../src/mainwindow.cpp" line="2675"/>
-        <location filename="../src/mainwindow.cpp" line="5666"/>
-        <location filename="../src/mainwindow.cpp" line="5914"/>
-        <location filename="../src/mainwindow.cpp" line="5925"/>
-        <location filename="../src/mainwindow.cpp" line="6043"/>
-        <location filename="../src/mainwindow.cpp" line="6083"/>
-        <location filename="../src/mainwindow.cpp" line="6103"/>
-        <location filename="../src/mainwindow.cpp" line="6144"/>
+        <location filename="../src/mainwindow.cpp" line="2657"/>
+        <location filename="../src/mainwindow.cpp" line="5360"/>
+        <location filename="../src/mainwindow.cpp" line="5371"/>
+        <location filename="../src/mainwindow.cpp" line="5489"/>
+        <location filename="../src/mainwindow.cpp" line="5529"/>
+        <location filename="../src/mainwindow.cpp" line="5549"/>
+        <location filename="../src/mainwindow.cpp" line="5590"/>
+        <location filename="../src/mainwindow_snap.cpp" line="295"/>
         <source>Install</source>
         <translation>Установить</translation>
     </message>
@@ -481,240 +491,240 @@
         <translation>Alt+U</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1085"/>
+        <location filename="../src/mainwindow.cpp" line="1067"/>
         <source>Uninstalling packages...</source>
         <translation>Удаление пакетов...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1090"/>
+        <location filename="../src/mainwindow.cpp" line="1072"/>
         <source>Running pre-uninstall operations...</source>
         <translation>Запуск предварительных операций перед удалением...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1108"/>
+        <location filename="../src/mainwindow.cpp" line="1090"/>
         <source>Running post-uninstall operations...</source>
         <translation>Запуск операций после удаления...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1125"/>
+        <location filename="../src/mainwindow.cpp" line="1107"/>
         <source>Refreshing sources...</source>
         <translation>Обновление источников...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="614"/>
-        <location filename="../src/mainwindow.cpp" line="1138"/>
-        <location filename="../src/mainwindow.cpp" line="2728"/>
-        <location filename="../src/mainwindow.cpp" line="2749"/>
-        <location filename="../src/mainwindow.cpp" line="2769"/>
-        <location filename="../src/mainwindow.cpp" line="2943"/>
-        <location filename="../src/mainwindow.cpp" line="3144"/>
-        <location filename="../src/mainwindow.cpp" line="3226"/>
-        <location filename="../src/mainwindow.cpp" line="3283"/>
-        <location filename="../src/mainwindow.cpp" line="3657"/>
-        <location filename="../src/mainwindow.cpp" line="3811"/>
-        <location filename="../src/mainwindow.cpp" line="4340"/>
-        <location filename="../src/mainwindow.cpp" line="4418"/>
-        <location filename="../src/mainwindow.cpp" line="4584"/>
-        <location filename="../src/mainwindow.cpp" line="4647"/>
-        <location filename="../src/mainwindow.cpp" line="4832"/>
-        <location filename="../src/mainwindow.cpp" line="4992"/>
-        <location filename="../src/mainwindow.cpp" line="5024"/>
-        <location filename="../src/mainwindow.cpp" line="5067"/>
-        <location filename="../src/mainwindow.cpp" line="5250"/>
-        <location filename="../src/mainwindow.cpp" line="6201"/>
-        <location filename="../src/mainwindow.cpp" line="6255"/>
-        <location filename="../src/mainwindow.cpp" line="6387"/>
-        <location filename="../src/mainwindow.cpp" line="6422"/>
-        <location filename="../src/mainwindow.cpp" line="6528"/>
-        <location filename="../src/mainwindow.cpp" line="6577"/>
+        <location filename="../src/mainwindow.cpp" line="577"/>
+        <location filename="../src/mainwindow.cpp" line="1120"/>
+        <location filename="../src/mainwindow.cpp" line="2710"/>
+        <location filename="../src/mainwindow.cpp" line="2731"/>
+        <location filename="../src/mainwindow.cpp" line="2751"/>
+        <location filename="../src/mainwindow.cpp" line="2925"/>
+        <location filename="../src/mainwindow.cpp" line="3126"/>
+        <location filename="../src/mainwindow.cpp" line="3208"/>
+        <location filename="../src/mainwindow.cpp" line="3265"/>
+        <location filename="../src/mainwindow.cpp" line="3639"/>
+        <location filename="../src/mainwindow.cpp" line="3793"/>
+        <location filename="../src/mainwindow.cpp" line="4445"/>
+        <location filename="../src/mainwindow.cpp" line="4523"/>
+        <location filename="../src/mainwindow.cpp" line="4689"/>
+        <location filename="../src/mainwindow.cpp" line="4752"/>
+        <location filename="../src/mainwindow.cpp" line="4937"/>
+        <location filename="../src/mainwindow.cpp" line="4989"/>
+        <location filename="../src/mainwindow.cpp" line="5647"/>
+        <location filename="../src/mainwindow.cpp" line="5701"/>
+        <location filename="../src/mainwindow.cpp" line="5833"/>
+        <location filename="../src/mainwindow.cpp" line="5868"/>
+        <location filename="../src/mainwindow.cpp" line="5975"/>
+        <location filename="../src/mainwindow.cpp" line="6024"/>
+        <location filename="../src/mainwindow_snap.cpp" line="33"/>
+        <location filename="../src/mainwindow_aur.cpp" line="143"/>
+        <location filename="../src/mainwindow_aur.cpp" line="175"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1139"/>
+        <location filename="../src/mainwindow.cpp" line="1121"/>
         <source>There was a problem updating sources. Some sources may not have provided updates. For more info check: </source>
         <translation>Возникла проблема с обновлением источников. Возможно, некоторые источники не предоставили обновления. Для получения дополнительной информации проверьте:</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1274"/>
-        <location filename="../src/mainwindow.cpp" line="1301"/>
+        <location filename="../src/mainwindow.cpp" line="1256"/>
+        <location filename="../src/mainwindow.cpp" line="1283"/>
         <source>Could not determine Debian version. Please select your version:</source>
         <translation>Не удалось определить версию Debian. Выберите вашу версию:</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1307"/>
+        <location filename="../src/mainwindow.cpp" line="1289"/>
         <source>Debian Version</source>
         <translation>Версия Debian</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1830"/>
+        <location filename="../src/mainwindow.cpp" line="1812"/>
         <source>Cancel</source>
         <translation>Отмена</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1836"/>
+        <location filename="../src/mainwindow.cpp" line="1818"/>
         <source>Please wait...</source>
         <translation>Пожалуйста, подождите...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2468"/>
+        <location filename="../src/mainwindow.cpp" line="2450"/>
         <source>You are about to use the MX Test repository, whose packages are provided for testing purposes only. It is possible that they might break your system, so it is suggested that you back up your system and install or update only one package at a time. Please provide feedback in the Forum so the package can be evaluated before moving up to Main.</source>
         <translation>Вы собираетесь использовать тестовый репозиторий MX, пакеты которого предоставляются только для тестирования. Возможно, они могут повредить вашу систему, поэтому рекомендуется создать резервную копию системы и устанавливать или обновлять только один пакет за раз. Пожалуйста, оставьте отзыв на Форуме, чтобы пакет мог быть оценён перед переносом в основной репозиторий.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2477"/>
+        <location filename="../src/mainwindow.cpp" line="2459"/>
         <source>You are about to use Debian Backports, which contains packages taken from the next Debian release (called &apos;testing&apos;), adjusted and recompiled for usage on Debian stable. They cannot be tested as extensively as in the stable releases of Debian and MX Linux, and are provided on an as-is basis, with risk of incompatibilities with other components in Debian stable. Use with care!</source>
         <translation>Вы собираетесь использовать Debian Backports, который содержит пакеты, взятые из следующего выпуска Debian (называемого &apos;testing&apos;), настроенные и перекомпилированные для использования в Debian stable. Они не могут быть протестированы так же тщательно, как в стабильных версиях Debian и MX Linux, и предоставляются &quot;как есть&quot;, с риском несовместимости с другими компонентами в Debian stable. Используйте с осторожностью!</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2485"/>
+        <location filename="../src/mainwindow.cpp" line="2467"/>
         <source>MX Linux includes this repository of flatpaks for the users&apos; convenience only, and is not responsible for the functionality of the individual flatpaks themselves. For more, consult flatpaks in the Wiki.</source>
         <translation>MX Linux включает этот репозиторий Flatpak только для удобства пользователей и не несёт ответственности за их функционирование. Подробнее о Flatpak в Вики.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2501"/>
-        <location filename="../src/mainwindow.cpp" line="6567"/>
+        <location filename="../src/mainwindow.cpp" line="2483"/>
+        <location filename="../src/mainwindow.cpp" line="6014"/>
         <source>Warning</source>
         <translation>Предупреждение</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2503"/>
+        <location filename="../src/mainwindow.cpp" line="2485"/>
         <source>Do not show this message again</source>
         <translation>Не показывать это сообщение снова</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2672"/>
+        <location filename="../src/mainwindow.cpp" line="2654"/>
         <source>Remove</source>
         <translation>Удалить</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2568"/>
-        <location filename="../src/mainwindow.cpp" line="2688"/>
+        <location filename="../src/mainwindow.cpp" line="2550"/>
+        <location filename="../src/mainwindow.cpp" line="2670"/>
         <source>The following packages were selected. Click Show Details for list of changes.</source>
         <translation>Следующие пакеты были выбраны. Нажмите «Показать подробности» для просмотра списка изменений.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2729"/>
-        <location filename="../src/mainwindow.cpp" line="2944"/>
-        <location filename="../src/mainwindow.cpp" line="3227"/>
+        <location filename="../src/mainwindow.cpp" line="2711"/>
+        <location filename="../src/mainwindow.cpp" line="2926"/>
+        <location filename="../src/mainwindow.cpp" line="3209"/>
         <source>Internet is not available, won&apos;t be able to download the list of packages</source>
         <translation>Интернет недоступен, невозможно загрузить список пакетов</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2732"/>
+        <location filename="../src/mainwindow.cpp" line="2714"/>
         <source>Installing packages...</source>
         <translation>Установка пакетов...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2863"/>
+        <location filename="../src/mainwindow.cpp" line="2845"/>
         <source>Post-processing...</source>
         <translation>Обработка...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2895"/>
+        <location filename="../src/mainwindow.cpp" line="2877"/>
         <source>Pre-processing for </source>
         <translation>Предварительная обработка для</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2910"/>
+        <location filename="../src/mainwindow.cpp" line="2892"/>
         <source>Installing </source>
         <translation>Установка</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2920"/>
+        <location filename="../src/mainwindow.cpp" line="2902"/>
         <source>Post-processing for </source>
         <translation>Обработка для</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="3141"/>
+        <location filename="../src/mainwindow.cpp" line="3123"/>
         <source>There was an error downloading or writing the file: %1. Please check your internet connection and free space on your drive</source>
         <translation>Произошла ошибка при загрузке или записи файла: %1. Пожалуйста, проверьте подключение к Интернету и свободное место на диске.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="3234"/>
+        <location filename="../src/mainwindow.cpp" line="3216"/>
         <source>Downloading package info...</source>
         <translation>Загрузка информации о пакетах...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="3950"/>
-        <location filename="../src/mainwindow.cpp" line="4076"/>
-        <location filename="../src/mainwindow.cpp" line="4100"/>
-        <location filename="../src/mainwindow.cpp" line="4144"/>
+        <location filename="../src/mainwindow.cpp" line="3907"/>
+        <location filename="../src/mainwindow.cpp" line="4054"/>
+        <location filename="../src/mainwindow.cpp" line="4205"/>
+        <location filename="../src/mainwindow.cpp" line="4249"/>
         <source>Package info</source>
         <translation>Информация о пакете</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="3986"/>
-        <location filename="../src/mainwindow.cpp" line="6462"/>
+        <location filename="../src/mainwindow.cpp" line="3943"/>
+        <location filename="../src/mainwindow.cpp" line="5908"/>
         <source>More &amp;info...</source>
         <translation>Подро&amp;бности...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4010"/>
+        <location filename="../src/mainwindow.cpp" line="4154"/>
         <source>Packages to be installed: </source>
         <translation>Пакеты, которые будут установлены:</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4336"/>
-        <location filename="../src/mainwindow.cpp" line="4393"/>
-        <location filename="../src/mainwindow.cpp" line="4415"/>
-        <location filename="../src/mainwindow.cpp" line="4580"/>
-        <location filename="../src/mainwindow.cpp" line="4626"/>
-        <location filename="../src/mainwindow.cpp" line="5702"/>
-        <location filename="../src/mainwindow.cpp" line="6252"/>
-        <location filename="../src/mainwindow.cpp" line="6383"/>
-        <location filename="../src/mainwindow.cpp" line="6416"/>
-        <location filename="../src/mainwindow.cpp" line="6524"/>
+        <location filename="../src/mainwindow.cpp" line="4441"/>
+        <location filename="../src/mainwindow.cpp" line="4498"/>
+        <location filename="../src/mainwindow.cpp" line="4520"/>
+        <location filename="../src/mainwindow.cpp" line="4685"/>
+        <location filename="../src/mainwindow.cpp" line="4731"/>
+        <location filename="../src/mainwindow.cpp" line="5698"/>
+        <location filename="../src/mainwindow.cpp" line="5829"/>
+        <location filename="../src/mainwindow.cpp" line="5862"/>
+        <location filename="../src/mainwindow.cpp" line="5971"/>
+        <location filename="../src/mainwindow_snap.cpp" line="492"/>
         <source>Done</source>
         <translation>Готово</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4336"/>
-        <location filename="../src/mainwindow.cpp" line="4393"/>
-        <location filename="../src/mainwindow.cpp" line="4415"/>
-        <location filename="../src/mainwindow.cpp" line="4580"/>
-        <location filename="../src/mainwindow.cpp" line="4626"/>
-        <location filename="../src/mainwindow.cpp" line="4644"/>
-        <location filename="../src/mainwindow.cpp" line="5702"/>
-        <location filename="../src/mainwindow.cpp" line="6252"/>
-        <location filename="../src/mainwindow.cpp" line="6383"/>
-        <location filename="../src/mainwindow.cpp" line="6416"/>
-        <location filename="../src/mainwindow.cpp" line="6524"/>
-        <location filename="../src/mainwindow.cpp" line="6574"/>
+        <location filename="../src/mainwindow.cpp" line="4441"/>
+        <location filename="../src/mainwindow.cpp" line="4498"/>
+        <location filename="../src/mainwindow.cpp" line="4520"/>
+        <location filename="../src/mainwindow.cpp" line="4685"/>
+        <location filename="../src/mainwindow.cpp" line="4731"/>
+        <location filename="../src/mainwindow.cpp" line="4749"/>
+        <location filename="../src/mainwindow.cpp" line="5698"/>
+        <location filename="../src/mainwindow.cpp" line="5829"/>
+        <location filename="../src/mainwindow.cpp" line="5862"/>
+        <location filename="../src/mainwindow.cpp" line="5971"/>
+        <location filename="../src/mainwindow.cpp" line="6021"/>
+        <location filename="../src/mainwindow_snap.cpp" line="492"/>
         <source>Processing finished successfully.</source>
         <translation>Обработка успешно завершена.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4331"/>
-        <location filename="../src/mainwindow.cpp" line="4391"/>
-        <location filename="../src/mainwindow.cpp" line="6411"/>
+        <location filename="../src/mainwindow.cpp" line="4436"/>
+        <location filename="../src/mainwindow.cpp" line="4496"/>
+        <location filename="../src/mainwindow.cpp" line="5857"/>
         <source>Install complete.</source>
         <translation>Установка завершена.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="615"/>
-        <location filename="../src/mainwindow.cpp" line="3658"/>
-        <location filename="../src/mainwindow.cpp" line="3812"/>
+        <location filename="../src/mainwindow.cpp" line="578"/>
+        <location filename="../src/mainwindow.cpp" line="3640"/>
+        <location filename="../src/mainwindow.cpp" line="3794"/>
         <source>The installed-package query returned an error. Please check the log for details.</source>
         <translation>Запрос к установленным пакетам вернул ошибку. Пожалуйста, проверьте журнал для получения подробной информации.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1771"/>
+        <location filename="../src/mainwindow.cpp" line="1753"/>
         <source>Show/hide input</source>
         <translation>Показать/скрыть ввод</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="1776"/>
+        <location filename="../src/mainwindow.cpp" line="1758"/>
         <source>Clear input</source>
         <translation>Очистить ввод</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2492"/>
+        <location filename="../src/mainwindow.cpp" line="2474"/>
         <source>You are about to use the AUR, which contains user-contributed packages. These packages are not vetted by the distribution, may be outdated, and could contain malicious or broken build scripts. Use with care.</source>
         <translation>Вы собираетесь использовать AUR, который содержит пакеты, созданные пользователями. Эти пакеты не проверяются дистрибутивом, могут быть устаревшими и могут содержать вредоносные или неработающие сценарии сборки. Используйте с осторожностью.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2750"/>
+        <location filename="../src/mainwindow.cpp" line="2732"/>
         <source>paru is not installed.
 
 To install AUR packages, please install paru first:
@@ -729,7 +739,7 @@ pacman -S paru
 Затем попробуйте установить пакет AUR снова.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="2770"/>
+        <location filename="../src/mainwindow.cpp" line="2752"/>
         <source>AUR packages cannot be built as root, and no regular user could be found to build as.
 
 Install the package as your normal user instead.</source>
@@ -738,32 +748,49 @@ Install the package as your normal user instead.</source>
 Установите пакет от имени обычного пользователя.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="3140"/>
+        <location filename="../src/mainwindow.cpp" line="3122"/>
         <source>The download timed out. Please check your internet connection and try again.</source>
         <translation>Время загрузки истекло. Пожалуйста, проверьте подключение к Интернету и попробуйте снова.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4101"/>
-        <location filename="../src/mainwindow.cpp" line="5002"/>
+        <location filename="../src/mainwindow.cpp" line="4037"/>
+        <source>Developer: %1</source>
+        <translation>Разработчик: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="4040"/>
+        <source>License: %1</source>
+        <translation>Лицензия: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="4044"/>
+        <source>Homepage: %1</source>
+        <translation>Домашняя страница: %1</translation>
+    </message>
+    <message>
+        <location filename="../src/mainwindow.cpp" line="4138"/>
+        <location filename="../src/mainwindow.cpp" line="4206"/>
+        <location filename="../src/mainwindow_snap.cpp" line="567"/>
+        <location filename="../src/mainwindow_aur.cpp" line="153"/>
         <source>No information available.</source>
         <translation>Информация отсутствует.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4341"/>
-        <location filename="../src/mainwindow.cpp" line="4419"/>
-        <location filename="../src/mainwindow.cpp" line="6256"/>
-        <location filename="../src/mainwindow.cpp" line="6388"/>
-        <location filename="../src/mainwindow.cpp" line="6423"/>
+        <location filename="../src/mainwindow.cpp" line="4446"/>
+        <location filename="../src/mainwindow.cpp" line="4524"/>
+        <location filename="../src/mainwindow.cpp" line="5702"/>
+        <location filename="../src/mainwindow.cpp" line="5834"/>
+        <location filename="../src/mainwindow.cpp" line="5869"/>
         <source>Problem detected while installing, please inspect the console output.</source>
         <translation>Обнаружена проблема при установке, пожалуйста, проверьте вывод консоли.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4360"/>
+        <location filename="../src/mainwindow.cpp" line="4465"/>
         <source>Install snaps</source>
         <translation>Установить пакеты Snap</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4361"/>
+        <location filename="../src/mainwindow.cpp" line="4466"/>
         <source>OK to install the following snap packages?
 
 %1</source>
@@ -772,82 +799,82 @@ Install the package as your normal user instead.</source>
 %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4372"/>
+        <location filename="../src/mainwindow.cpp" line="4477"/>
         <source>Installing packages: %1...</source>
         <translation>Установка пакетов: %1…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4375"/>
+        <location filename="../src/mainwindow.cpp" line="4480"/>
         <source>Installing package: %1...</source>
         <translation>Установка пакета: %1…</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4396"/>
+        <location filename="../src/mainwindow.cpp" line="4501"/>
         <source>Problem detected while installing a snap. Click &quot;Show Details&quot; for more information.</source>
         <translation>Обнаружена проблема при установке пакета Snap. Нажмите «Показать подробности» для получения дополнительной информации.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4431"/>
+        <location filename="../src/mainwindow.cpp" line="4536"/>
         <source>About %1</source>
         <translation>О %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4432"/>
+        <location filename="../src/mainwindow.cpp" line="4537"/>
         <source>Version: </source>
         <translation>Версия: </translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4434"/>
+        <location filename="../src/mainwindow.cpp" line="4539"/>
         <source>Package Installer for MX Linux</source>
         <translation>Установщик пакетов для MX Linux</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4436"/>
+        <location filename="../src/mainwindow.cpp" line="4541"/>
         <source>Copyright (c) MX Linux</source>
         <translation>Авторское право (c) MX Linux</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4437"/>
+        <location filename="../src/mainwindow.cpp" line="4542"/>
         <source>%1 License</source>
         <translation>Лицензия %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4445"/>
-        <location filename="../src/mainwindow.cpp" line="4447"/>
+        <location filename="../src/mainwindow.cpp" line="4550"/>
+        <location filename="../src/mainwindow.cpp" line="4552"/>
         <source>%1 Help</source>
         <translation>Справка %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4561"/>
-        <location filename="../src/mainwindow.cpp" line="6517"/>
+        <location filename="../src/mainwindow.cpp" line="4666"/>
+        <location filename="../src/mainwindow.cpp" line="5964"/>
         <source>Uninstalling flatpaks...</source>
         <translation>Удаление пакетов Flatpak...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4570"/>
-        <location filename="../src/mainwindow.cpp" line="4624"/>
-        <location filename="../src/mainwindow.cpp" line="6519"/>
+        <location filename="../src/mainwindow.cpp" line="4675"/>
+        <location filename="../src/mainwindow.cpp" line="4729"/>
+        <location filename="../src/mainwindow.cpp" line="5966"/>
         <source>Uninstall complete.</source>
         <translation>Удаление завершено.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4571"/>
-        <location filename="../src/mainwindow.cpp" line="6520"/>
+        <location filename="../src/mainwindow.cpp" line="4676"/>
+        <location filename="../src/mainwindow.cpp" line="5967"/>
         <source>Refreshing flatpaks...</source>
         <translation>Обновление списка Flatpak...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4584"/>
+        <location filename="../src/mainwindow.cpp" line="4689"/>
         <source>We encountered a problem uninstalling, please check output</source>
         <translation>При удалении возникла проблема, пожалуйста, проверьте вывод</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4604"/>
+        <location filename="../src/mainwindow.cpp" line="4709"/>
         <source>Remove snaps</source>
         <translation>Удалить пакеты Snap</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4605"/>
+        <location filename="../src/mainwindow.cpp" line="4710"/>
         <source>OK to remove the following snap packages?
 
 %1</source>
@@ -856,31 +883,31 @@ Install the package as your normal user instead.</source>
 %1</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4629"/>
+        <location filename="../src/mainwindow.cpp" line="4734"/>
         <source>We encountered a problem removing a snap. Click &quot;Show Details&quot; for more information.</source>
         <translation>При удалении пакета Snap возникла проблема. Нажмите «Показать подробности» для получения дополнительной информации.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4644"/>
-        <location filename="../src/mainwindow.cpp" line="6574"/>
+        <location filename="../src/mainwindow.cpp" line="4749"/>
+        <location filename="../src/mainwindow.cpp" line="6021"/>
         <source>Success</source>
         <translation>Успешно</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4647"/>
-        <location filename="../src/mainwindow.cpp" line="6577"/>
+        <location filename="../src/mainwindow.cpp" line="4752"/>
+        <location filename="../src/mainwindow.cpp" line="6024"/>
         <source>We encountered a problem uninstalling the program</source>
         <translation>При удалении программы возникла проблема</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="3284"/>
-        <location filename="../src/mainwindow.cpp" line="4833"/>
-        <location filename="../src/mainwindow.cpp" line="5068"/>
+        <location filename="../src/mainwindow.cpp" line="3266"/>
+        <location filename="../src/mainwindow.cpp" line="4938"/>
+        <location filename="../src/mainwindow.cpp" line="4990"/>
         <source>Could not download the list of packages. Please check your APT sources.</source>
         <translation>Не удалось загрузить список пакетов. Пожалуйста, проверьте ваши источники APT.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="4993"/>
+        <location filename="../src/mainwindow_aur.cpp" line="144"/>
         <source>paru is not installed.
 
 Install it with: pacman -S paru</source>
@@ -889,149 +916,149 @@ Install it with: pacman -S paru</source>
 Установите его с помощью: pacman -S paru</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5025"/>
+        <location filename="../src/mainwindow_aur.cpp" line="176"/>
         <source>Could not query AUR packages. Please check that paru is installed and you are online.</source>
         <translation>Не удалось выполнить запрос к пакетам AUR. Пожалуйста, проверьте, установлен ли paru и есть ли подключение к Интернету.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5150"/>
-        <location filename="../src/mainwindow.cpp" line="5208"/>
+        <location filename="../src/mainwindow.cpp" line="5072"/>
+        <location filename="../src/mainwindow.cpp" line="5130"/>
         <source>Flatpak not installed</source>
         <translation>Flatpak не установлен</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5151"/>
+        <location filename="../src/mainwindow.cpp" line="5073"/>
         <source>Flatpak is not currently installed.
 OK to go ahead and install it?</source>
         <translation>В настоящий момент Flatpak не установлен.
 Установить его?</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5208"/>
+        <location filename="../src/mainwindow.cpp" line="5130"/>
         <source>Flatpak was not installed</source>
         <translation>Flatpak не был установлен</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5235"/>
-        <location filename="../src/mainwindow.cpp" line="5630"/>
+        <location filename="../src/mainwindow.cpp" line="5157"/>
+        <location filename="../src/mainwindow_snap.cpp" line="471"/>
         <source>Needs re-login</source>
         <translation>Требуется повторный вход</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5236"/>
+        <location filename="../src/mainwindow.cpp" line="5158"/>
         <source>You might need to logout/login to see installed items in the menu</source>
         <translation>Возможно, потребуется выйти и снова войти в систему, чтобы увидеть установленные элементы в меню</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5478"/>
+        <location filename="../src/mainwindow_snap.cpp" line="261"/>
         <source>No results</source>
         <translation>Нет результатов</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5478"/>
+        <location filename="../src/mainwindow_snap.cpp" line="261"/>
         <source>No snaps found matching &quot;%1&quot;.</source>
         <translation>Не найдено пакетов Snap, соответствующих &quot;%1&quot;.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5527"/>
+        <location filename="../src/mainwindow_snap.cpp" line="368"/>
         <source>snapd was not installed. Click &quot;Show Details&quot; for more information.</source>
         <translation>snapd не был установлен. Нажмите «Показать подробности» для получения дополнительной информации.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5551"/>
+        <location filename="../src/mainwindow_snap.cpp" line="392"/>
         <source>Installing the base &quot;core&quot; snap...</source>
         <translation>Установка базового пакета Snap &quot;core&quot;...</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5617"/>
+        <location filename="../src/mainwindow_snap.cpp" line="458"/>
         <source>No output was captured. Run &apos;sudo snap install core&apos; in a terminal to see the underlying error.</source>
         <translation>Вывод не был захвачен. Выполните &apos;sudo snap install core&apos; в терминале, чтобы увидеть основную ошибку.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5622"/>
+        <location filename="../src/mainwindow_snap.cpp" line="463"/>
         <source>snapd was installed but its service could not be started. You may need to reboot or log out and back in, then reopen the Snap tab. Click &quot;Show Details&quot; for more information.</source>
         <translation>snapd был установлен, но его служба не может быть запущена. Возможно, потребуется перезагрузить систему или выйти и снова войти в систему, затем снова открыть вкладку Snap. Нажмите «Показать подробности» для получения дополнительной информации.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5626"/>
+        <location filename="../src/mainwindow_snap.cpp" line="467"/>
         <source>Snap support was enabled, but the base &quot;core&quot; snap could not be installed, so most snaps will not work yet. Click &quot;Show Details&quot; for the underlying error.</source>
         <translation>Поддержка Snap была включена, но базовый пакет Snap &quot;core&quot; не может быть установлен, поэтому большинство пакетов Snap пока не будут работать. Нажмите «Показать подробности» для получения основной ошибки.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5707"/>
+        <location filename="../src/mainwindow_snap.cpp" line="497"/>
         <source>Problem detected while updating snaps. Click &quot;Show Details&quot; for more information.</source>
         <translation>Обнаружена проблема при обновлении пакетов Snap. Нажмите «Показать подробности» для получения дополнительной информации.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5914"/>
-        <location filename="../src/mainwindow.cpp" line="5925"/>
-        <location filename="../src/mainwindow.cpp" line="6041"/>
-        <location filename="../src/mainwindow.cpp" line="6105"/>
+        <location filename="../src/mainwindow.cpp" line="5360"/>
+        <location filename="../src/mainwindow.cpp" line="5371"/>
+        <location filename="../src/mainwindow.cpp" line="5487"/>
+        <location filename="../src/mainwindow.cpp" line="5551"/>
         <source>Mark keep</source>
         <translation>Оставить</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5941"/>
+        <location filename="../src/mainwindow.cpp" line="5387"/>
         <source>Select/deselect all upgradable</source>
         <translation>Выбрать/отменить выбор всех обновляемых</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5942"/>
+        <location filename="../src/mainwindow.cpp" line="5388"/>
         <source>Select/deselect all autoremovable</source>
         <translation>Выбрать/отменить выбор всех автоудаляемых</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="6043"/>
-        <location filename="../src/mainwindow.cpp" line="6103"/>
+        <location filename="../src/mainwindow.cpp" line="5489"/>
+        <location filename="../src/mainwindow.cpp" line="5549"/>
         <source>Upgrade</source>
         <translation>Обновить</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="6308"/>
+        <location filename="../src/mainwindow.cpp" line="5754"/>
         <source>Show input</source>
         <translation>Показать ввод</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="6308"/>
+        <location filename="../src/mainwindow.cpp" line="5754"/>
         <source>Hide input</source>
         <translation>Скрыть ввод</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="6317"/>
-        <location filename="../src/mainwindow.cpp" line="6472"/>
+        <location filename="../src/mainwindow.cpp" line="5763"/>
+        <location filename="../src/mainwindow.cpp" line="5919"/>
         <source>Quit?</source>
         <translation>Выйти?</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="6318"/>
-        <location filename="../src/mainwindow.cpp" line="6473"/>
+        <location filename="../src/mainwindow.cpp" line="5764"/>
+        <location filename="../src/mainwindow.cpp" line="5920"/>
         <source>Process still running, quitting might leave the system in an unstable state.&lt;p&gt;&lt;b&gt;Are you sure you want to exit MX Package Installer?&lt;/b&gt;</source>
         <translation>Процесс всё ещё выполняется, выход может оставить систему в нестабильном состоянии.&lt;p&gt;&lt;b&gt;Вы уверены, что хотите выйти из MX Установщика пакетов?&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="6083"/>
+        <location filename="../src/mainwindow.cpp" line="5529"/>
         <source>Reinstall</source>
         <translation>Переустановить</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5631"/>
+        <location filename="../src/mainwindow_snap.cpp" line="472"/>
         <source>Log out and back in to see installed items in the menu and use snap commands from /snap/bin. These changes do not apply to your current session.</source>
         <translation>Выйдите и снова войдите в систему, чтобы увидеть установленные элементы в меню и использовать команды Snap из /snap/bin. Эти изменения не применяются к текущему сеансу.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="5699"/>
-        <location filename="../src/mainwindow.cpp" line="6380"/>
+        <location filename="../src/mainwindow.cpp" line="5826"/>
+        <location filename="../src/mainwindow_snap.cpp" line="489"/>
         <source>Update complete.</source>
         <translation>Обновление завершено.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="6202"/>
-        <location filename="../src/mainwindow.cpp" line="6529"/>
+        <location filename="../src/mainwindow.cpp" line="5648"/>
+        <location filename="../src/mainwindow.cpp" line="5976"/>
         <source>Problem detected during last operation, please inspect the console output.</source>
         <translation>Обнаружена проблема во время последней операции, пожалуйста, проверьте вывод консоли.</translation>
     </message>
     <message>
-        <location filename="../src/mainwindow.cpp" line="6568"/>
+        <location filename="../src/mainwindow.cpp" line="6015"/>
         <source>Potentially dangerous operation.
 Please make sure you check carefully the list of packages to be removed.</source>
         <translation>Потенциально опасная операция.
@@ -1212,8 +1239,8 @@ Please make sure you check carefully the list of packages to be removed.</source
         <translation>&amp;Закрыть</translation>
     </message>
     <message>
-        <location filename="../src/lockfile_apt.cpp" line="52"/>
         <location filename="../src/lockfile_pacman.cpp" line="85"/>
+        <location filename="../src/lockfile_apt.cpp" line="52"/>
         <source>Warning</source>
         <translation>Предупреждение</translation>
     </message>
@@ -1230,7 +1257,7 @@ Close the program, or wait until it is done processing and try again.</source>
         <translation>другой менеджер пакетов</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="86"/>
+        <location filename="../src/main.cpp" line="93"/>
         <source>MX Package Installer is a tool used for managing packages on MX Linux
     - installs popular programs from different sources
     - installs programs from the MX Test repo
@@ -1243,23 +1270,23 @@ Close the program, or wait until it is done processing and try again.</source>
     - установка Flatpak</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="94"/>
+        <location filename="../src/main.cpp" line="101"/>
         <source>Skip online check if it falsely reports lack of internet access.</source>
         <translation>Пропустить проверку подключения к Интернету, если она ложно сообщает об его отсутствии.</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="104"/>
-        <location filename="../src/main.cpp" line="112"/>
+        <location filename="../src/main.cpp" line="111"/>
+        <location filename="../src/main.cpp" line="119"/>
         <source>Error</source>
         <translation>Ошибка</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="105"/>
+        <location filename="../src/main.cpp" line="112"/>
         <source>You seem to be logged in as root, please log out and log in as normal user to use this program.</source>
         <translation>Похоже, вы вошли в систему как root. Пожалуйста, выйдите и войдите как обычный пользователь для использования этой программы.</translation>
     </message>
     <message>
-        <location filename="../src/main.cpp" line="113"/>
+        <location filename="../src/main.cpp" line="120"/>
         <source>You must run this program with admin access.</source>
         <translation>Вы должны запустить эту программу с правами администратора.</translation>
     </message>
@@ -1274,27 +1301,37 @@ Close the program, or wait until it is done processing and try again.</source>
 <context>
     <name>SnapModel</name>
     <message>
-        <location filename="../src/models/snapmodel.cpp" line="146"/>
+        <location filename="../src/models/snapmodel.cpp" line="89"/>
+        <source>More info</source>
+        <translation>Подробности</translation>
+    </message>
+    <message>
+        <location filename="../src/models/snapmodel.cpp" line="155"/>
         <source>Package</source>
         <translation>Пакет</translation>
     </message>
     <message>
-        <location filename="../src/models/snapmodel.cpp" line="148"/>
+        <location filename="../src/models/snapmodel.cpp" line="157"/>
+        <source>Info</source>
+        <translation>Информация</translation>
+    </message>
+    <message>
+        <location filename="../src/models/snapmodel.cpp" line="159"/>
         <source>Version</source>
         <translation>Версия</translation>
     </message>
     <message>
-        <location filename="../src/models/snapmodel.cpp" line="150"/>
+        <location filename="../src/models/snapmodel.cpp" line="161"/>
         <source>Publisher</source>
         <translation>Издатель</translation>
     </message>
     <message>
-        <location filename="../src/models/snapmodel.cpp" line="152"/>
+        <location filename="../src/models/snapmodel.cpp" line="163"/>
         <source>Notes</source>
         <translation>Заметки</translation>
     </message>
     <message>
-        <location filename="../src/models/snapmodel.cpp" line="154"/>
+        <location filename="../src/models/snapmodel.cpp" line="165"/>
         <source>Description</source>
         <translation>Описание</translation>
     </message>
