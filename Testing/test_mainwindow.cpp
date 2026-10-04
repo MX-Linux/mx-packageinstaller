@@ -29,6 +29,7 @@
 #include <QSemaphore>
 #include <QSignalBlocker>
 #include <QStandardPaths>
+#include <QThreadPool>
 #include <QTimer>
 
 #include <atomic>
@@ -459,6 +460,11 @@ int main(int argc, char *argv[])
     QStandardPaths::setTestModeEnabled(true);
 
     TestMainWindowAsync tc;
-    return QTest::qExec(&tc, argc, argv);
+    const int result = QTest::qExec(&tc, argc, argv);
+    // Same as src/main.cpp: wait for background workers still running a command
+    // (tests destroy windows mid-startup) while the application can still deliver
+    // their process events, or the binary never exits.
+    QThreadPool::globalInstance()->waitForDone();
+    return result;
 }
 #include "test_mainwindow.moc"

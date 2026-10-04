@@ -29,6 +29,7 @@
 #include <QIcon>
 #include <QLibraryInfo>
 #include <QLocale>
+#include <QThreadPool>
 #include <QTranslator>
 
 #include <unistd.h>
@@ -124,5 +125,10 @@ int main(int argc, char *argv[])
     Log startLog(Log::defaultLogPath());
     MainWindow w(parser);
     w.show();
-    return QApplication::exec();
+    const int result = QApplication::exec();
+    // Background workers (e.g. pacman's startup queries) run their commands through
+    // QProcess. Once ~QCoreApplication() starts, those processes stop receiving events,
+    // so its own wait for the thread pool would never return; wait here instead.
+    QThreadPool::globalInstance()->waitForDone();
+    return result;
 }
