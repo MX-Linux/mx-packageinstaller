@@ -65,10 +65,12 @@ QHash<QString, PackageInfo> pacmanAvailablePackages(bool *ok)
             continue;
         }
         if (line.startsWith(' ') || line.startsWith('\t')) {
-            if (!pendingName.isEmpty()) {
+            // Repos are listed in pacman.conf order, and pacman -S installs from the
+            // first one that has the package, so keep the first entry for each name.
+            if (!pendingName.isEmpty() && !packages.contains(pendingName)) {
                 packages.insert(pendingName, {pendingVersion, line.trimmed()});
-                pendingName.clear();
             }
+            pendingName.clear();
             continue;
         }
         const QString repoAndName = line.section(' ', 0, 0);

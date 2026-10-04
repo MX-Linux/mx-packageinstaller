@@ -47,10 +47,19 @@ bool MainWindow::buildAurList(const QString &searchTerm)
 
     Cmd shell;
     QScopedValueRollback<bool> guard(suppressCmdOutput, true);
+    // "pacman -Qm" and "paru -Ss" exit 1 when nothing matches. With no output at all
+    // (stderr is captured too, so a real error leaves a message), that is an empty
+    // result, not a failed query.
+    const auto queryFailed = [&shell](const QStringList &output) {
+        if (shell.exitStatus() != QProcess::NormalExit) {
+            return true;
+        }
+        return shell.exitCode() != 0 && !(shell.exitCode() == 1 && output.isEmpty());
+    };
     if (term.isEmpty()) {
         const QStringList installed
             = shell.getOut({{"LANG", "C"}}, "pacman", {"-Qm", "--color", "never"}).split('\n', Qt::SkipEmptyParts);
-        if (shell.exitStatus() != QProcess::NormalExit || shell.exitCode() != 0) {
+        if (queryFailed(installed)) {
             return false;
         }
         if (installed.isEmpty()) {
@@ -88,9 +97,10 @@ bool MainWindow::buildAurList(const QString &searchTerm)
     if (!isOnline()) {
         return false;
     }
-    QStringList results = shell.getOut({{"LANG", "C"}}, paruPath, {"-Ssq", "--color", "never", term})
+    // --aur: plain "-Ss" also searches the sync repos and lists their matches first.
+    QStringList results = shell.getOut({{"LANG", "C"}}, paruPath, {"-Ssq", "--aur", "--color", "never", term})
                               .split('\n', Qt::SkipEmptyParts);
-    if (shell.exitStatus() != QProcess::NormalExit || shell.exitCode() != 0) {
+    if (queryFailed(results)) {
         return false;
     }
     if (results.isEmpty()) {
@@ -101,7 +111,7 @@ bool MainWindow::buildAurList(const QString &searchTerm)
         results = results.mid(0, maxResults);
     }
 
-    QStringList infoArgs {"-Si", "--color", "never"};
+    QStringList infoArgs {"-Si", "--aur", "--color", "never"};
     infoArgs += results;
     const QString infoOutput = shell.getOut({{"LANG", "C"}}, paruPath, infoArgs);
     if (shell.exitStatus() != QProcess::NormalExit || shell.exitCode() != 0 || infoOutput.trimmed().isEmpty()) {
