@@ -170,7 +170,8 @@ if [ "$ARCH_BUILD" = true ]; then
     echo "Using version ${ARCH_VERSION} from PKGBUILD"
 
     ARCH_BUILDDIR=$(mktemp -d -p "$PWD" archpkgbuild.XXXXXX)
-    trap 'rm -rf "$ARCH_BUILDDIR"' EXIT
+    # Also on failure: a pkg/ left behind ends up in the Debian source tarball.
+    trap 'rm -rf "$ARCH_BUILDDIR" pkg' EXIT
 
     rm -rf pkg *.pkg.tar.zst
 

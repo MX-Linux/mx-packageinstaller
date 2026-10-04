@@ -11,3 +11,7 @@ tar-ignore = ".qtcreator"
 tar-ignore = "obj-*"
 tar-ignore = ".codex"
 tar-ignore = ".agents"
+# Arch makepkg output (build.sh --arch), which stays behind when makepkg fails.
+tar-ignore = "pkg"
+tar-ignore = "archpkgbuild.*"
+tar-ignore = "*.pkg.tar.zst"
