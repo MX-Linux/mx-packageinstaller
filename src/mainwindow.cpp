@@ -1288,17 +1288,19 @@ uchar MainWindow::showVersionDialog(const QString &message)
     QMessageBox msgBox;
     msgBox.setWindowTitle(tr("Debian Version"));
     msgBox.setText(message);
-    msgBox.addButton("Bookworm", QMessageBox::AcceptRole);
+    const QAbstractButton *bookwormButton = msgBox.addButton("Bookworm", QMessageBox::AcceptRole);
     msgBox.addButton("Trixie", QMessageBox::AcceptRole);
-    msgBox.addButton(QMessageBox::Cancel);
+    const QAbstractButton *cancelButton = msgBox.addButton(QMessageBox::Cancel);
     msgBox.show();
 
-    int ret = msgBox.exec();
+    // exec()'s return value is opaque for custom buttons (since Qt 6.5 it is no
+    // longer the button's index), so identify the choice by the clicked button.
+    msgBox.exec();
 
-    if (ret == QMessageBox::Cancel) {
+    if (msgBox.clickedButton() == cancelButton) {
         exit(EXIT_FAILURE);
     }
-    return ret == 0 ? Release::Bookworm : Release::Trixie;
+    return msgBox.clickedButton() == bookwormButton ? Release::Bookworm : Release::Trixie;
 }
 
 QString MainWindow::getDebianVerName(uchar version)
@@ -2875,6 +2877,16 @@ bool MainWindow::installPopularApp(const QString &name)
         }
     }
     enableOutput();
+    // A preinstall hook can add a temporary third-party repo (tempList). Remove it on
+    // every return path below, including cancellation and lock failures, so it never
+    // stays an active apt source for the rest of the session.
+    const auto removeTempList = qScopeGuard([this] {
+        if (QFile::exists(tempList)) {
+            Cmd helperCmd;
+            runMxpiMaintenanceAsRoot(helperCmd, QStringLiteral("cleanup_temp"));
+            updateApt();
+        }
+    });
     // Preinstall
     if (!preinstall.isEmpty()) {
         qDebug() << "Pre-install";
@@ -2883,11 +2895,6 @@ bool MainWindow::installPopularApp(const QString &name)
             return false;
         }
         if (!cmd.runHookAsRoot(preinstall)) {
-            if (QFile::exists(tempList)) {
-                Cmd helperCmd;
-                runMxpiMaintenanceAsRoot(helperCmd, QStringLiteral("cleanup_temp"));
-                updateApt();
-            }
             return false;
         }
     }
@@ -2910,11 +2917,6 @@ bool MainWindow::installPopularApp(const QString &name)
         if (!cmd.runHookAsRoot(postinstall)) {
             result = false;
         }
-    }
-    if (QFile::exists(tempList)) {
-        Cmd helperCmd;
-        runMxpiMaintenanceAsRoot(helperCmd, QStringLiteral("cleanup_temp"));
-        updateApt();
     }
     return result;
 }

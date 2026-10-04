@@ -20,13 +20,16 @@
 // background-thread timing.
 #include <QtTest>
 
+#include <QAbstractButton>
 #include <QCommandLineParser>
 #include <QCoreApplication>
+#include <QMessageBox>
 #include <QProcess>
 #include <QScopeGuard>
 #include <QSemaphore>
 #include <QSignalBlocker>
 #include <QStandardPaths>
+#include <QTimer>
 
 #include <atomic>
 #include <memory>
@@ -76,6 +79,7 @@ private slots:
     void testDestructionDuringBackgroundWork();
     void testFlatpakGenerationStaleness();
     void testMarkKeepFollowsCurrentTabFilter();
+    void testVersionDialogReturnsClickedRelease();
 #ifdef PACKAGE_BACKEND_PACMAN
     void testEnabledReposRenderedWithoutInstalledFlagFlow();
 #endif
@@ -267,6 +271,34 @@ void TestMainWindowAsync::testMarkKeepFollowsCurrentTabFilter()
     setFilter(window.ui->comboFilterMX, MainWindow::tr("Autoremovable"));
     window.buildChangeList(package, Qt::Checked);
     QCOMPARE(window.ui->pushInstall->text(), MainWindow::tr("Mark keep"));
+}
+
+// The Debian version picker (shown when /etc/debian_version is unreadable or holds
+// an unknown codename) must return the release whose button was clicked.
+// QMessageBox::exec() returns an opaque code for custom buttons -- since Qt 6.5 not
+// the button index -- so reading it as an index always yielded Trixie.
+void TestMainWindowAsync::testVersionDialogReturnsClickedRelease()
+{
+    const auto pick = [](const QString &buttonText) {
+        QTimer clicker;
+        QObject::connect(&clicker, &QTimer::timeout, [&clicker, buttonText] {
+            const auto *box = qobject_cast<QMessageBox *>(QApplication::activeModalWidget());
+            if (!box) {
+                return;
+            }
+            for (QAbstractButton *button : box->buttons()) {
+                if (button->text() == buttonText) {
+                    clicker.stop();
+                    button->click();
+                    return;
+                }
+            }
+        });
+        clicker.start(10);
+        return static_cast<int>(MainWindow::showVersionDialog(QStringLiteral("Select your version")));
+    };
+    QCOMPARE(pick(QStringLiteral("Bookworm")), static_cast<int>(Release::Bookworm));
+    QCOMPARE(pick(QStringLiteral("Trixie")), static_cast<int>(Release::Trixie));
 }
 
 #ifdef PACKAGE_BACKEND_PACMAN
