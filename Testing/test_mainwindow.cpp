@@ -25,6 +25,7 @@
 #include <QProcess>
 #include <QScopeGuard>
 #include <QSemaphore>
+#include <QSignalBlocker>
 #include <QStandardPaths>
 
 #include <atomic>
@@ -74,6 +75,7 @@ private slots:
 
     void testDestructionDuringBackgroundWork();
     void testFlatpakGenerationStaleness();
+    void testMarkKeepFollowsCurrentTabFilter();
 #ifdef PACKAGE_BACKEND_PACMAN
     void testEnabledReposRenderedWithoutInstalledFlagFlow();
 #endif
@@ -232,6 +234,39 @@ void TestMainWindowAsync::testFlatpakGenerationStaleness()
     QVERIFY(window.isFlatpakGenerationStale(generationBeforeReload));
     // ...but one that captured the current generation is not.
     QVERIFY(!window.isFlatpakGenerationStale(generationAfterReload));
+}
+
+// Install turns into "Mark keep" only when the *current* package tab filters on
+// Autoremovable. Each tab has its own filter combo, and the combos are synced only
+// on a tab switch, so a stale Enabled Repos combo must not decide for MX Test.
+// pushInstall_clicked() picks markKeep() vs installSelected() with the same
+// predicate that sets this label.
+void TestMainWindowAsync::testMarkKeepFollowsCurrentTabFilter()
+{
+    QCommandLineParser parser;
+    setupTestParser(parser);
+    MainWindow window(parser, nullptr, {}, /*testSkipFlatpakPreload=*/true);
+
+    // Signals blocked: this sets the combos' state without running filterChanged().
+    const auto setFilter = [](QComboBox *combo, const QString &text) {
+        const QSignalBlocker blocker(combo);
+        combo->setCurrentText(text);
+        QCOMPARE(combo->currentText(), text);
+    };
+    const QString package = QStringLiteral("mxpi-test-package");
+    window.currentTree = window.ui->treeMXtest;
+    window.changeList.clear();
+
+    setFilter(window.ui->comboFilterEnabled, MainWindow::tr("Autoremovable"));
+    setFilter(window.ui->comboFilterMX, MainWindow::tr("Not installed"));
+    window.buildChangeList(package, Qt::Checked);
+    QVERIFY(window.ui->pushInstall->text() != MainWindow::tr("Mark keep"));
+    window.buildChangeList(package, Qt::Unchecked);
+
+    setFilter(window.ui->comboFilterEnabled, MainWindow::tr("All packages"));
+    setFilter(window.ui->comboFilterMX, MainWindow::tr("Autoremovable"));
+    window.buildChangeList(package, Qt::Checked);
+    QCOMPARE(window.ui->pushInstall->text(), MainWindow::tr("Mark keep"));
 }
 
 #ifdef PACKAGE_BACKEND_PACMAN

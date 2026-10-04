@@ -65,6 +65,7 @@ namespace Ui
 class MainWindow;
 }
 
+class QComboBox;
 class QNetworkReply;
 
 namespace Tab
@@ -451,6 +452,7 @@ private:
         PackageModel *model = nullptr;
         PackageFilterProxy *proxy = nullptr;
         QHash<QString, PackageInfo> *list = nullptr;
+        QComboBox *filterCombo = nullptr;
     };
     // True once either a confirmation dialog was canceled or an elevated call was
     // dismissed anywhere during the current operation. Callers use this to abort
@@ -462,6 +464,9 @@ private:
         Cmd::resetElevationDismissed();
     }
     [[nodiscard]] AptTabContext currentAptTab();
+    // Whether the current package tab's own filter combo is set to "Autoremovable",
+    // i.e. whether Install acts as "Mark keep" there.
+    [[nodiscard]] bool currentTabFiltersAutoremovable();
     [[nodiscard]] QHash<QString, PackageInfo> *getCurrentList();
     [[nodiscard]] PackageModel *getCurrentModel();
     [[nodiscard]] PackageFilterProxy *getCurrentProxy();
@@ -492,7 +497,7 @@ private:
     void cancelDownload();
     void centerWindow();
     void clearUi();
-    void displayAutoremovable();
+    void displayAutoremovable(PackageModel *model);
     void displayFilteredFP(QStringList list, bool raw = false);
     void displayFlatpaks(bool forceUpdate = false);
     void displayPackages();

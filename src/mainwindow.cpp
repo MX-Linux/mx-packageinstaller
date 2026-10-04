@@ -1999,7 +1999,9 @@ void MainWindow::displayPackages()
         currentTree->setUpdatesEnabled(true);
     }
 
-    QMetaObject::invokeMethod(this, [this] { displayAutoremovable(); }, Qt::QueuedConnection);
+    // Bind the model now: callers such as rebuildPackageViews() switch currentTree
+    // temporarily and restore it before this queued call runs.
+    QMetaObject::invokeMethod(this, [this, model] { displayAutoremovable(model); }, Qt::QueuedConnection);
 
     QApplication::restoreOverrideCursor();
 
@@ -2030,7 +2032,7 @@ void MainWindow::handleInstalledPackagesArrived()
 }
 #endif
 
-void MainWindow::displayAutoremovable()
+void MainWindow::displayAutoremovable(PackageModel *model)
 {
 #ifdef PACKAGE_BACKEND_PACMAN
     if (skipInitialAutoremovableCheck) {
@@ -2045,30 +2047,32 @@ void MainWindow::displayAutoremovable()
         return;
     }
 
-    // Update autoremovable status in the current model
-    auto *model = getCurrentModel();
-    if (model) {
-        model->setAutoremovable(names);
-    }
+    model->setAutoremovable(names);
 }
 
 MainWindow::AptTabContext MainWindow::currentAptTab()
 {
     if (currentTree == ui->treeMXtest) {
-        return {mxtestModel, mxtestProxy, &mxList};
+        return {mxtestModel, mxtestProxy, &mxList, ui->comboFilterMX};
     }
     if (currentTree == ui->treeBackports) {
-        return {backportsModel, backportsProxy, &backportsList};
+        return {backportsModel, backportsProxy, &backportsList, ui->comboFilterBP};
     }
     if (currentTree == ui->treeEnabled) {
-        return {enabledModel, enabledProxy, &enabledList};
+        return {enabledModel, enabledProxy, &enabledList, ui->comboFilterEnabled};
     }
 #ifdef PACKAGE_BACKEND_PACMAN
     if (currentTree == ui->treeAUR) {
-        return {aurModel, aurProxy, &aurList};
+        return {aurModel, aurProxy, &aurList, ui->comboFilterAUR};
     }
 #endif
     return {};
+}
+
+bool MainWindow::currentTabFiltersAutoremovable()
+{
+    const QComboBox *filterCombo = currentAptTab().filterCombo;
+    return filterCombo && filterCombo->currentText() == tr("Autoremovable");
 }
 
 PackageModel *MainWindow::getCurrentModel()
@@ -4510,7 +4514,7 @@ void MainWindow::pushInstall_clicked()
         bool success = false;
         if (currentTree == ui->treePopularApps) {
             success = installPopularApps();
-        } else if (ui->comboFilterEnabled->currentText() == tr("Autoremovable")) {
+        } else if (currentTabFiltersAutoremovable()) {
             success = markKeep();
         } else {
             success = installSelected();
@@ -5547,7 +5551,7 @@ void MainWindow::buildChangeList(const QString &packageName, Qt::CheckState stat
 
     ui->pushUninstall->setEnabled(checkInstalled(changeList));
     ui->pushInstall->setText(checkUpgradable(changeList) ? tr("Upgrade") : tr("Install"));
-    if (ui->comboFilterEnabled->currentText() == tr("Autoremovable")) {
+    if (currentTabFiltersAutoremovable()) {
         ui->pushInstall->setText(tr("Mark keep"));
     }
 
