@@ -71,7 +71,7 @@ All tests use QtTest framework and can be run individually or through CMake's te
 - **Multiple Package Sources**: APT repositories, Flatpak, curated popular applications
 - **Architecture Filtering**: Automatic detection and filtering for current system architecture
 - **Version Management**: Sophisticated Debian version comparison and selection
-- **Privilege Escalation**: Secure administrative operations via pkexec/gksu
+- **Privilege Escalation**: Secure administrative operations via pkexec
 - **Comprehensive Testing**: Unit tests for critical package management logic
 - **Internationalization**: Full translation support for multiple languages
 

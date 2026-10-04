@@ -378,6 +378,14 @@ void MainWindow::setupSnapd()
     runMxpiLibAsRoot(cmd, QStringLiteral("snapd_setup"), Cmd::QuietMode::No);
     QString setupOutput = cmd.readAllOutput();
     setCursor(QCursor(Qt::ArrowCursor));
+    // Dismissing this prompt cancels the setup. Continuing would ask again for the core
+    // snap, and the still-set dismissed flag would end that step silently even after
+    // the user authenticated and core was installed.
+    if (Cmd::elevationDismissed()) {
+        ui->tabWidget->setCurrentWidget(ui->tabSnap);
+        enableTabs(true);
+        return;
+    }
 
     firstRunSnap = false;
     displaySnaps(true);

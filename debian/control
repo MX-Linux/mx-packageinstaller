@@ -17,7 +17,7 @@ Package: mx-packageinstaller
 Architecture: any
 Depends: aptitude,
          mx-packageinstaller-pkglist (>= 17.4),
-         sudo | pkexec | gksu,
+         pkexec,
          ${misc:Depends},
          ${shlibs:Depends}
 Recommends: flatpak (<< 1.0) | xdg-desktop-portal-gtk,

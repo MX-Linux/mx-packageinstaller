@@ -109,11 +109,11 @@ Cmd::Cmd(QObject *parent)
     connect(this, &Cmd::errorAvailable, [this](const QString &err) { outBuffer += err; });
 }
 
+// pkexec is the only supported elevation tool: the helper's polkit policy and its
+// auth-marker check (isValidMarkerPath(), keyed on PKEXEC_UID) both depend on it.
 QString Cmd::elevationTool()
 {
     if (QFile::exists("/usr/bin/pkexec")) return QStringLiteral("/usr/bin/pkexec");
-    if (QFile::exists("/usr/bin/gksu")) return QStringLiteral("/usr/bin/gksu");
-    if (QFile::exists("/usr/bin/sudo")) return QStringLiteral("/usr/bin/sudo");
     return {};
 }
 

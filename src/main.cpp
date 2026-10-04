@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
         }
     }
     if (getuid() != 0) {
-        if (!QFile::exists("/usr/bin/pkexec") && !QFile::exists("/usr/bin/gksu")) {
+        if (!QFile::exists("/usr/bin/pkexec")) {
             QMessageBox::critical(nullptr, QObject::tr("Error"),
                                   QObject::tr("You must run this program with admin access."));
             return EXIT_FAILURE;

@@ -56,7 +56,7 @@ copy_log() {
     # Where the app wrote its log (see Log::defaultLogPath): a GUI run logs to
     # the caller's private runtime dir (/run/user/<uid>); a root run logs to
     # /run. Both are non-world-writable, unlike the legacy /tmp fallback.
-    # The caller's uid may come from pkexec, sudo/gksu, or the login session.
+    # The caller's uid may come from pkexec, sudo, or the login session.
     if [[ "$PKEXEC_UID" =~ ^[0-9]+$ ]]; then
         uid="$PKEXEC_UID"
     elif [[ "$SUDO_UID" =~ ^[0-9]+$ ]]; then
