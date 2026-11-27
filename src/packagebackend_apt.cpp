@@ -34,6 +34,17 @@ QHash<QString, QString> debconfEnvironment()
     return {{QStringLiteral("DEBIAN_FRONTEND"), debconfFrontend()}};
 }
 
+QStringList installedPackageFields(const QString &line)
+{
+    // dpkg-query prefixes each row with three status characters and a space.
+    // The second character is the current state, including for packages on hold.
+    constexpr qsizetype statusWidth = 3;
+    if (line.size() <= statusWidth || line.at(1) != 'i' || line.at(statusWidth) != ' ') {
+        return {};
+    }
+    return line.mid(statusWidth + 1).split(' ', Qt::SkipEmptyParts);
+}
+
 } // namespace
 
 bool PackageBackend::refreshRepositories(Cmd &cmd)
@@ -57,15 +68,10 @@ QHash<QString, PackageInfo> PackageBackend::listInstalled(bool *ok)
     }
 
     QHash<QString, PackageInfo> installedPackagesMap;
-    const QString statusPrefix = QStringLiteral("ii ");
     const auto lines = list.split('\n', Qt::SkipEmptyParts);
 
     for (const QString &line : lines) {
-        if (!line.startsWith(statusPrefix)) {
-            continue;
-        }
-
-        const QStringList parts = line.mid(statusPrefix.length()).split(' ', Qt::SkipEmptyParts);
+        const QStringList parts = installedPackageFields(line);
         if (parts.size() < 2) {
             continue;
         }
@@ -97,11 +103,7 @@ QHash<QString, VersionNumber> PackageBackend::listInstalledVersions(bool *ok)
     }
 
     for (const QString &line : packageList) {
-        const QString statusPrefix = QStringLiteral("ii ");
-        if (!line.startsWith(statusPrefix)) {
-            continue;
-        }
-        const QStringList packageInfo = line.mid(statusPrefix.length()).split(' ', Qt::SkipEmptyParts);
+        const QStringList packageInfo = installedPackageFields(line);
         if (packageInfo.size() == 2) {
             installedVersions.insert(packageInfo.at(0), VersionNumber(packageInfo.at(1)));
         }
