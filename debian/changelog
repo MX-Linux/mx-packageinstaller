@@ -1,3 +1,25 @@
+mx-packageinstaller (26.11) mx; urgency=medium
+
+  * Keep Popular Applications and Enabled Repos in sync after installing
+    or removing a package.
+  * Show held Debian packages as installed.
+  * Skip a popular application's final setup steps if installation fails.
+  * Limit "Remove unused runtimes" to the selected Flatpak installation,
+    either for the current user or for all users.
+  * Keep packages checked on other tabs when the Flatpak list loads.
+  * Clear the Snap selection on refresh so a later removal affects only
+    the snaps checked in the refreshed list.
+  * On Arch, preview repository updates safely and ask for confirmation
+    of a full system upgrade when installing repository or AUR packages.
+  * On Arch, show installed packages and AUR search details correctly
+    when the system language is not English.
+  * Save only the latest 1 MiB of the current user's session log so a
+    large log cannot fill the disk while it is being archived.
+  * Show command-line help and version information without a graphical
+    session.
+
+ -- Adrian <adrian@mxlinux.org>  Fri, 27 Nov 2026 10:07:42 -0500
+
 mx-packageinstaller (26.10) mx; urgency=medium
 
   * Decide between Install and "Mark keep" from the current tab's own filter
