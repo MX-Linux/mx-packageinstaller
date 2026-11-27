@@ -5960,7 +5960,7 @@ void MainWindow::pushRemoveUnused_clicked()
     setCursor(QCursor(Qt::BusyCursor));
     enableOutput();
     showFlatpakProgress(tr("Uninstalling flatpaks..."));
-    if (cmd.procOnPty(QStringLiteral("flatpak"), {"uninstall", "--unused", "-y"})) {
+    if (cmd.procOnPty(QStringLiteral("flatpak"), {"uninstall", fpUser.trimmed(), "--unused", "-y"})) {
         appendFlatpakStatusMessage(ui->outputBox, tr("Uninstall complete."));
         showFlatpakProgress(tr("Refreshing flatpaks..."));
         displayFlatpaks(true);
