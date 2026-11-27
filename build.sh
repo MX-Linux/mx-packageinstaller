@@ -1,241 +1,240 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Copyright (C) 2017-2026 MX Authors. License: GPL-3.0-or-later
+set -euo pipefail
+unset CDPATH
+shopt -s nullglob
 
-# **********************************************************************
-# * Copyright (C) 2017-2026 MX Authors
-# *
-# * Authors: Adrian
-# *          Dolphin_Oracle
-# *          MX Linux <http://mxlinux.org>
-# *
-# * This file is part of mx-packageinstaller.
-# *
-# * mx-packageinstaller is free software: you can redistribute it and/or modify
-# * it under the terms of the GNU General Public License as published by
-# * the Free Software Foundation, either version 3 of the License, or
-# * (at your option) any later version.
-# *
-# * mx-packageinstaller is distributed in the hope that it will be useful,
-# * but WITHOUT ANY WARRANTY; without even the implied warranty of
-# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# * GNU General Public License for more details.
-# *
-# * You should have received a copy of the GNU General Public License
-# * along with mx-packageinstaller.  If not, see <http://www.gnu.org/licenses/>.
-# **********************************************************************/
-
-set -e
-
-# Derive this package's own name/version (matching the artifact filenames
-# dpkg-buildpackage drops in the parent directory, e.g.
-# mx-packageinstaller_26.07.3_amd64.deb) from debian/changelog. Used to scope
-# the debs/ move and cleanup globs so they can never touch unrelated files
-# that merely happen to contain "build" in their name.
-package_artifact_prefix() {
-    local pkg version
-    pkg=$(dpkg-parsechangelog -S Source)
-    version=$(dpkg-parsechangelog -S Version)
-    # Debian policy: artifact filenames never include the epoch.
-    version="${version#*:}"
-    echo "${pkg}_${version}"
+die() { echo "build: $*" >&2; exit 1; }
+usage() {
+    cat <<'HELP'
+Usage: build [OPTIONS]
+  -d, --debug       Debug build (default: Release)
+  -c, --clang       Use Clang, including for Debian packages
+      --clean       Clean the selected build tree before configuring
+      --clean-only  Clean and exit (alias: clean)
+      --configure   Configure only (alias: configure)
+      --build-only  Build an existing configuration (aliases: build, make)
+      make-clean    Clean compiled targets in the existing configuration
+      all, fresh    Configure and build, optionally starting clean
+  -t, --tests       Enable and run CTest (also --test)
+  -j, --jobs N      Set the number of build jobs
+      --asan        Enable AddressSanitizer in a separate build tree
+      --gui-only    Build the GUI in projects with split GUI/CLI targets
+      --cli-only    Build the CLI in projects with split GUI/CLI targets
+      --debian      Build unsigned Debian packages into debs/
+      --arch        Build a local Arch package into build/arch/
+      --nodeps      Skip Arch dependency checks (for local cross-distro builds)
+  -h, --help        Show this help
+HELP
 }
 
-# Default values
-BUILD_DIR="build"
-BUILD_TYPE="Release"
-USE_CLANG=false
-CLEAN=false
-DEBIAN_BUILD=false
-ARCH_BUILD=false
-BUILD_TESTS=false
-RUN_TESTS_ONLY=false
-
-# Parse command line arguments
-while [[ $# -gt 0 ]]; do
+mode=normal
+type=Release
+compiler=default
+clean=false
+tests=false
+asan=false
+nodeps=false
+component=
+jobs=
+set_mode() {
+    [[ $mode == normal ]] || die "choose one build mode"
+    mode=$1
+}
+while (($#)); do
     case $1 in
-        -d|--debug)
-            BUILD_TYPE="Debug"
-            shift
-            ;;
-        -c|--clang)
-            USE_CLANG=true
-            shift
-            ;;
-        --clean)
-            CLEAN=true
-            shift
-            ;;
-        --debian)
-            DEBIAN_BUILD=true
-            shift
-            ;;
-        --arch)
-            ARCH_BUILD=true
-            shift
-            ;;
-        -t|--tests)
-            BUILD_TESTS=true
-            shift
-            ;;
-        --test)
-            RUN_TESTS_ONLY=true
-            shift
-            ;;
-        -h|--help)
-            echo "Usage: $0 [OPTIONS]"
-            echo "Options:"
-            echo "  -d, --debug     Build in Debug mode (default: Release)"
-            echo "  -c, --clang     Use clang compiler"
-            echo "  -t, --tests     Build with unit tests enabled and run them"
-            echo "  --test          Run tests only (no build)"
-            echo "  --clean         Clean build directory before building"
-            echo "  --debian        Build Debian package"
-            echo "  --arch          Build Arch Linux package"
-            echo "  -h, --help      Show this help message"
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $1"
-            exit 1
-            ;;
+        -h|--help|help) usage; exit ;;
+        -d|--debug) type=Debug ;;
+        -c|--clang) compiler=clang ;;
+        --clean|fresh|--fresh) clean=true ;;
+        --clean-only|clean) set_mode clean-only; clean=true ;;
+        --configure|configure) set_mode configure ;;
+        --build-only|build|make) set_mode build-only ;;
+        all) ;;
+        make-clean) set_mode make-clean ;;
+        --debian|--arch) set_mode "${1#--}" ;;
+        -t|--tests|--test) tests=true ;;
+        --asan) asan=true ;;
+        --nodeps) nodeps=true ;;
+        --gui-only|--cli-only)
+            [[ -z $component ]] || die "choose one GUI/CLI target"
+            component=${1#--} ;;
+        -j|--jobs)
+            [[ ${2:-} =~ ^[1-9][0-9]*$ ]] || die "--jobs requires a positive integer"
+            jobs=$2; shift ;;
+        *) die "unknown argument: $1" ;;
     esac
+    shift
 done
 
-# Run tests only (no build)
-if [ "$RUN_TESTS_ONLY" = true ]; then
-    if [ ! -d "$BUILD_DIR/Testing" ]; then
-        echo "Error: Tests not found. Build with --tests first."
-        exit 1
-    fi
-    echo "Running tests..."
-    cd "$BUILD_DIR/Testing" && ctest --verbose
-    exit $?
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+if [[ -f $script_dir/CMakeLists.txt ]]; then
+    cd -- "$script_dir"
+else
+    cd -- "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 fi
+root=$PWD
+dir=build
+[[ $compiler != clang ]] || dir+=-clang
+[[ $type != Debug ]] || dir+=-debug
+[[ $asan == false ]] || dir+=-asan
+[[ -z $component ]] || dir+=-"$component"
 
-# Build Debian package
-if [ "$DEBIAN_BUILD" = true ]; then
-    echo "Building Debian package..."
-    debuild -us -uc
+cleanup() {
+    rm -rf -- "$dir"
+    rm -f -- debian/*.debhelper.log debian/*.substvars debian/files translations/*.qm
+    rm -rf -- debian/.debhelper obj-*/
+    if [[ -f debian/control ]]; then
+        while read -r package; do
+            [[ $package =~ ^[a-z0-9][a-z0-9+.-]+$ ]] && rm -rf -- "debian/$package"
+        done < <(sed -n 's/^Package:[[:space:]]*//p' debian/control)
+    fi
+    if [[ -f src/version.h ]] && git check-ignore -q -- src/version.h; then rm -- src/version.h; fi
+    return 0
+}
 
-    echo "Creating debs directory and moving debian artifacts..."
+build_debian() {
+    [[ -f debian/rules && -f debian/changelog ]] || die "Debian packaging is missing"
+    local source version arch changes log
+    source=$(dpkg-parsechangelog -SSource)
+    version=$(dpkg-parsechangelog -SVersion)
+    arch=$(dpkg-architecture -qDEB_HOST_ARCH)
+    changes=../${source}_${version#*:}_${arch}.changes
+    log=${changes%.changes}.build
+    local args=(-us -uc)
+    [[ $compiler != clang ]] || args+=(-eCC=clang -eCXX=clang++)
+    [[ -z $jobs ]] || args+=("-j$jobs")
+    command -v dcmd >/dev/null || die "dcmd from devscripts is required"
+    debuild "${args[@]}"
+    [[ -s $changes ]] || die "missing changes manifest: $changes"
+    if [[ $source == mx-viewer ]]; then
+        # Its source package must contain only files tracked by Git.
+        local archive=../${source}_${version#*:}.tar.xz files tracked extra
+        files=$(tar -tf "$archive" | sed -n 's|^[^/]*/||p' | sed '/^$/d; /\/$/d' | LC_ALL=C sort -u)
+        tracked=$(git -c core.quotePath=false ls-files | LC_ALL=C sort -u)
+        extra=$(LC_ALL=C comm -23 <(printf '%s\n' "$files") <(printf '%s\n' "$tracked"))
+        [[ -z $extra ]] || die "untracked files in $archive: $extra"
+    fi
     mkdir -p debs
-    ARTIFACT_PREFIX=$(package_artifact_prefix)
-    mv ../"${ARTIFACT_PREFIX}"*.deb debs/ 2>/dev/null || true
-    mv ../"${ARTIFACT_PREFIX}"*.changes debs/ 2>/dev/null || true
-    mv ../"${ARTIFACT_PREFIX}"*.dsc debs/ 2>/dev/null || true
-    mv ../"${ARTIFACT_PREFIX}"*.tar.* debs/ 2>/dev/null || true
-    mv ../"${ARTIFACT_PREFIX}"*.buildinfo debs/ 2>/dev/null || true
-    mv ../"${ARTIFACT_PREFIX}"*.build debs/ 2>/dev/null || true
+    dcmd mv -- "$changes" debs/
+    if [[ -f $log ]]; then mv -- "$log" debs/; fi
+    cleanup
+}
 
-    echo "Cleaning build directory and debian artifacts..."
-    rm -rf "$BUILD_DIR"
-    rm -f debian/*.debhelper.log debian/*.substvars debian/files
-    rm -rf debian/.debhelper/ debian/mx-packageinstaller/ obj-*/
-    rm -f translations/*.qm version.h
-    rm -f ../"${ARTIFACT_PREFIX}"*.build ../"${ARTIFACT_PREFIX}"*.buildinfo 2>/dev/null || true
-
-    echo "Debian package build completed!"
-    echo "Debian artifacts moved to debs/ directory"
-    exit 0
-fi
-
-# Build Arch Linux package
-if [ "$ARCH_BUILD" = true ]; then
-    echo "Building Arch Linux package..."
-
-    if ! command -v makepkg &> /dev/null; then
-        echo "Error: makepkg not found. Please install base-devel package."
-        exit 1
+build_arch() (
+    command -v makepkg >/dev/null || die "--arch requires makepkg"
+    local recipe work tree stage version metadata source prefix archive github
+    for recipe in arch . aur; do [[ ! -f $recipe/PKGBUILD ]] || break; done
+    [[ -f $recipe/PKGBUILD ]] || die "no PKGBUILD in arch/, the project root, or aur/"
+    work=$(mktemp -d)
+    trap 'rm -rf -- "$work"' EXIT
+    stage=$work/recipe
+    mkdir -p "$stage" "$root/build/arch"
+    # Snapshot tracked edits without changing the developer tree or index.
+    tree=$(git stash create)
+    tree=${tree:-HEAD}
+    version=
+    if [[ -f debian/changelog ]]; then
+        version=$(sed -n '1s/^[^(]*(\([^)]*\)).*/\1/p' debian/changelog)
+        version=${version#*:}; version=${version%-*}
     fi
-
-    if [ ! -f PKGBUILD ]; then
-        echo "Error: PKGBUILD not found; cannot determine version for Arch build."
-        exit 1
-    fi
-    PKGVER_LINE=$(sed -n 's/^pkgver=//p' PKGBUILD | head -n 1)
-    PKGREL=$(sed -n 's/^pkgrel=//p' PKGBUILD | head -n 1)
-    if [ -z "$PKGVER_LINE" ]; then
-        echo "Error: could not parse pkgver from PKGBUILD."
-        exit 1
-    fi
-    if [[ "$PKGVER_LINE" =~ ^\$\{PKGVER:-([^}]+)\}$ ]]; then
-        PKGVER="${BASH_REMATCH[1]}"
+    export PKGDEST="$root/build/arch" BUILDDIR="$work/build" SRCDEST="$work/sources"
+    mkdir -p "$SRCDEST"
+    if [[ -n $jobs ]]; then export MAKEFLAGS="-j$jobs" CMAKE_BUILD_PARALLEL_LEVEL="$jobs"; fi
+    if [[ $recipe == . ]]; then
+        git archive "$tree" -- . ':!debs' | tar -x -C "$stage"
+        [[ -z $version ]] || export PKGVER="$version"
     else
-        PKGVER="$PKGVER_LINE"
+        # Copy recipe inputs only. Makepkg may leave package caches beside the recipe.
+        for file in "$recipe"/*; do
+            [[ -f $file ]] || continue
+            case $file in *.pkg.tar.*|*.src.tar.*) continue ;; esac
+            cp -- "$file" "$stage/"
+        done
+        if [[ -n $version ]]; then sed -i "s/^pkgver=.*/pkgver=$version/" "$stage/PKGBUILD"; fi
+        metadata=$(cd "$stage" && makepkg --printsrcinfo)
+        source=$(awk '$1=="source" {print $3; exit}' <<< "$metadata")
+        github='^https://github\.com/[^/]+/([^/]+)/archive/refs/tags/([^/]+)\.tar\.gz$'
+        case $source in
+            *_*.tar.xz) archive=$source; prefix=src ;;
+            *-source.tar) archive=$source; prefix=${source%.tar} ;;
+            *)
+                if [[ ${source#*::} =~ $github ]]; then
+                    prefix=${BASH_REMATCH[1]}-${BASH_REMATCH[2]#v}
+                    archive=${source##*/}
+                    [[ $source != *::* ]] || archive=${source%%::*}
+                else
+                    archive=
+                fi ;;
+        esac
+        if [[ -n $archive ]]; then
+            [[ $archive != */* && $archive != .* ]] || die "invalid source archive: $archive"
+            git archive --prefix="$prefix/" "$tree" -- . ':!debs' > "$work/tree.tar"
+            case $archive in
+                *.gz) gzip -c "$work/tree.tar" > "$SRCDEST/$archive" ;;
+                *.xz) xz -c "$work/tree.tar" > "$SRCDEST/$archive" ;;
+                *) mv -- "$work/tree.tar" "$SRCDEST/$archive" ;;
+            esac
+            # Replace just the working-tree archive checksum, preserving auxiliary checksums.
+            local checksum
+            checksum=$(sha256sum "$SRCDEST/$archive"); checksum=${checksum%% *}
+            sed -Ei "0,/^sha256sums=\(/s/^(sha256sums=\([[:space:]]*)['\"]?[^ )'\"]+['\"]?/\1'$checksum'/" "$stage/PKGBUILD"
+        fi
     fi
-    if [ -n "$PKGREL" ]; then
-        ARCH_VERSION="${PKGVER}-${PKGREL}"
-    else
-        ARCH_VERSION="${PKGVER}"
-    fi
-    echo "Using version ${ARCH_VERSION} from PKGBUILD"
-
-    ARCH_BUILDDIR=$(mktemp -d -p "$PWD" archpkgbuild.XXXXXX)
-    # Also on failure: a pkg/ left behind ends up in the Debian source tarball.
-    trap 'rm -rf "$ARCH_BUILDDIR" pkg' EXIT
-
-    rm -rf pkg *.pkg.tar.zst
-
-    PKG_DEST_DIR="$PWD/build"
-    mkdir -p "$PKG_DEST_DIR"
-
-    PKGDEST="$PKG_DEST_DIR" PKGVER="$PKGVER" PKGREL="$PKGREL" makepkg -f
-
-    echo "Cleaning makepkg artifacts..."
-    rm -rf pkg
-
-    echo "Arch Linux package build completed!"
-    echo "Package: $(ls *.pkg.tar.zst 2>/dev/null || echo 'not found')"
-    echo "Binary available at: build/mx-packageinstaller"
-    exit 0
-fi
-
-# Clean build directory if requested
-if [ "$CLEAN" = true ]; then
-    echo "Cleaning build directory and debian artifacts..."
-    rm -rf "$BUILD_DIR"
-    rm -f debian/*.debhelper.log debian/*.substvars debian/files
-    rm -rf debian/.debhelper/ debian/mx-packageinstaller/ obj-*/
-    rm -f translations/*.qm version.h
-    if command -v dpkg-parsechangelog >/dev/null 2>&1; then
-        ARTIFACT_PREFIX=$(package_artifact_prefix)
-        rm -f ../"${ARTIFACT_PREFIX}"*.build ../"${ARTIFACT_PREFIX}"*.buildinfo 2>/dev/null || true
-    fi
-fi
-
-# Create build directory
-mkdir -p "$BUILD_DIR"
-
-# Configure CMake with Ninja
-echo "Configuring CMake with Ninja generator..."
-CMAKE_ARGS=(
-    -G Ninja
-    -B "$BUILD_DIR"
-    -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
-    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    cd -- "$stage"
+    local flags=()
+    if [[ $nodeps == true ]]; then flags+=(--nodeps); fi
+    makepkg --verifysource "${flags[@]}"
+    makepkg -f "${flags[@]}"
+    makepkg --packagelist
 )
 
-if [ "$USE_CLANG" = true ]; then
-    CMAKE_ARGS+=(-DUSE_CLANG=ON)
-    echo "Using clang compiler"
+[[ $nodeps == false || $mode == arch ]] || die "--nodeps requires --arch"
+if [[ $mode == arch || $mode == debian ]]; then
+    [[ $type == Release && $tests == false && $clean == false && $asan == false && -z $component ]] || die "package mode cannot be combined with CMake options"
+    if [[ $mode == arch ]]; then
+        [[ $compiler == default ]] || die "--arch uses the recipe's compiler"
+        build_arch
+    else
+        build_debian
+    fi
+    exit
 fi
 
-if [ "$BUILD_TESTS" = true ]; then
-    CMAKE_ARGS+=(-DBUILD_TESTS=ON)
-    echo "Building with tests enabled"
+[[ -f CMakeLists.txt ]] || die "no CMakeLists.txt in $root"
+[[ $mode != build-only || $clean == false ]] || die "--clean conflicts with --build-only"
+[[ $mode != clean-only || $tests == false ]] || die "--clean-only cannot run tests"
+if [[ $clean == true ]]; then cleanup; fi
+[[ $mode != clean-only ]] || exit 0
+
+if [[ $mode == make-clean ]]; then
+    cmake --build "$dir" --target clean
+    exit
 fi
-
-cmake "${CMAKE_ARGS[@]}"
-
-# Build the project
-echo "Building project with Ninja..."
-cmake --build "$BUILD_DIR" --parallel
-
-echo "Build completed successfully!"
-echo "Executable: $BUILD_DIR/mx-packageinstaller"
-
-# Run tests if built with tests
-if [ "$BUILD_TESTS" = true ]; then
-    echo "Running tests..."
-    cd "$BUILD_DIR" && ctest --verbose
-    cd - > /dev/null
+if [[ $mode != build-only ]]; then
+    args=(-S . -B "$dir" -G Ninja "-DCMAKE_BUILD_TYPE=$type" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON)
+    if grep -Eq '^[[:space:]]*project\(update-notifier-qt([[:space:]]|\))' CMakeLists.txt; then args+=(-DCMAKE_INSTALL_PREFIX=/usr); fi
+    if [[ $compiler == clang ]]; then args+=(-DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++); fi
+    if grep -Eiq 'option\(WARNINGS_AS_ERRORS\b' CMakeLists.txt; then args+=(-DWARNINGS_AS_ERRORS=ON); fi
+    if [[ -n $component ]]; then
+        grep -Eiq 'option\(BUILD_GUI\b' CMakeLists.txt || die "this project does not define BUILD_GUI"
+        grep -Eiq 'option\(BUILD_CLI\b' CMakeLists.txt || die "this project does not define BUILD_GUI and BUILD_CLI"
+        if [[ $component == cli-only ]]; then args+=(-DBUILD_GUI=OFF -DBUILD_CLI=ON)
+        else args+=(-DBUILD_GUI=ON -DBUILD_CLI=OFF); fi
+    fi
+    if [[ $asan == true ]]; then
+        args+=("-DCMAKE_CXX_FLAGS=-fsanitize=address -fno-omit-frame-pointer" -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address)
+    fi
+    if [[ $tests == true ]]; then
+        args+=(-DBUILD_TESTING=ON)
+        for opt in BUILD_TESTS ENABLE_TESTS; do
+            if grep -Eiq "option\($opt\b" CMakeLists.txt; then args+=("-D$opt=ON"); fi
+        done
+    fi
+    cmake "${args[@]}"
+    [[ $mode != configure ]] || exit 0
+else
+    [[ -f $dir/CMakeCache.txt ]] || die "$dir has not been configured"
 fi
+cmake --build "$dir" --parallel ${jobs:+"$jobs"}
+if [[ $tests == true ]]; then ctest --test-dir "$dir" --output-on-failure --no-tests=error; fi
