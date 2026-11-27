@@ -55,7 +55,6 @@ void printError(const QString &message)
 [[nodiscard]] const QHash<QString, QStringList> &allowedCommands()
 {
     static const QHash<QString, QStringList> commands {
-        {"chown", {"/usr/bin/chown", "/bin/chown"}},
         {"fuser", {"/usr/bin/fuser", "/bin/fuser"}},
         {"ps", {"/usr/bin/ps", "/bin/ps"}},
         {"snap", {"/usr/bin/snap", "/snap/bin/snap"}},
