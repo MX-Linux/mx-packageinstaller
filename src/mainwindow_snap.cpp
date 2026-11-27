@@ -305,6 +305,9 @@ void MainWindow::pushRefreshSnap_clicked()
         handleSnapTab(QString());
         return;
     }
+    changeList.clear();
+    ui->pushInstall->setEnabled(false);
+    ui->pushUninstall->setEnabled(false);
     ui->searchBoxSnap->clear();
     ui->comboFilterSnap->blockSignals(true);
     ui->comboFilterSnap->setCurrentText(tr("Installed snaps"));
