@@ -423,6 +423,8 @@ void TestMainWindowAsync::testRemovedPackageUpdatesPopularOnTabSwitch()
     const QString package = QStringLiteral("mxpi-regression-test-removed-package");
     window.popularApps = {{.category = "Tests", .name = package, .uninstallNames = package}};
     window.installedPackages.insert(package, PackageInfo {});
+    // Give Enabled Repos a candidate so rebuilding the view works with empty APT lists on OBS.
+    window.applyPreloadedEnabledList({{package, PackageInfo {QStringLiteral("1"), QString()}}});
     window.refreshPopularApps();
     auto popularApp = [&] { return window.popularModel->getAppData(window.popularModel->findItemByName(package)); };
     QVERIFY(popularApp() && popularApp()->isInstalled);
