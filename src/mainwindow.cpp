@@ -2292,7 +2292,9 @@ void MainWindow::setupFlatpakDisplay()
     if (flatpakModel) {
         flatpakModel->clear();
     }
-    changeList.clear();
+    if (currentTree == ui->treeFlatpak) {
+        changeList.clear();
+    }
     blockInterfaceFP();
 }
 

@@ -79,6 +79,7 @@ private slots:
 
     void testDestructionDuringBackgroundWork();
     void testFlatpakGenerationStaleness();
+    void testFlatpakPreloadPreservesOtherSelections();
     void testMarkKeepFollowsCurrentTabFilter();
     void testVersionDialogReturnsClickedRelease();
     void testHeaderSelectAllChecksVisibleUpgradable();
@@ -244,6 +245,25 @@ void TestMainWindowAsync::testFlatpakGenerationStaleness()
     QVERIFY(window.isFlatpakGenerationStale(generationBeforeReload));
     // ...but one that captured the current generation is not.
     QVERIFY(!window.isFlatpakGenerationStale(generationAfterReload));
+}
+
+void TestMainWindowAsync::testFlatpakPreloadPreservesOtherSelections()
+{
+    QCommandLineParser parser;
+    setupTestParser(parser);
+    MainWindow window(parser, nullptr, {}, /*testSkipFlatpakPreload=*/true);
+    window.cachedFlatpakRemotesFetched = true;
+    window.cachedFlatpakRemotesScope = window.fpUser;
+
+    window.currentTree = window.ui->treeEnabled;
+    const QStringList pending {"selected-package"};
+    window.changeList = pending;
+    window.setupFlatpakDisplay();
+    QCOMPARE(window.changeList, pending);
+
+    window.currentTree = window.ui->treeFlatpak;
+    window.setupFlatpakDisplay();
+    QVERIFY(window.changeList.isEmpty());
 }
 
 // Install turns into "Mark keep" only when the *current* package tab filters on
