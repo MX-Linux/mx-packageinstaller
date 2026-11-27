@@ -27,7 +27,9 @@ if [[ $# -ge 2 && "$1" == "--marker" ]]; then
 fi
 
 repo_sync() {
-    pacman -Sy --noconfirm
+    # Refresh the catalog without advancing the system database ahead of installed packages.
+    local db=/run/mx-packageinstaller-pacman
+    install -d -m 0755 -- "$db" && pacman --dbpath "$db" --logfile /dev/null -Sy --noconfirm
 }
 
 # Rotates (truncates to its last $2 bytes) $1 if it's currently longer than

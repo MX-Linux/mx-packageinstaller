@@ -48,10 +48,11 @@ bool PackageBackend::refreshRepositories(Cmd &cmd)
 // indented description line, e.g.:
 //   extra/firefox 130.0-1 [installed]
 //       Fast, Private and Safe Web Browser
-QHash<QString, PackageInfo> pacmanAvailablePackages(bool *ok)
+QHash<QString, PackageInfo> pacmanAvailablePackages(const QStringList &databaseArgs, bool *ok)
 {
     Cmd shell;
-    const QString output = shell.getOut({{"LANG", "C"}}, "pacman", {"-Ss", "--color", "never"});
+    const auto args = databaseArgs + QStringList {"-Ss", "--color", "never"};
+    const QString output = shell.getOut({{"LANG", "C"}}, "pacman", args);
 
     if (ok) {
         *ok = shell.exitStatus() == QProcess::NormalExit && shell.exitCode() == 0;
@@ -170,7 +171,7 @@ QStringList PackageBackend::autoremovableCandidates(Cmd &cmd)
 bool PackageBackend::installPackages(Cmd &cmd, const QStringList &names, const QStringList &extraArgs)
 {
     Q_UNUSED(extraArgs); // no pacman equivalent to apt's recommends/-t release flags today
-    QStringList args {"-S", "--needed"};
+    QStringList args {"-Syu", "--needed"};
     args += names;
     return cmd.procAsRoot("pacman", args);
 }

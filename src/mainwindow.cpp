@@ -71,10 +71,18 @@ using namespace std::chrono_literals;
 // sits next to listInstalled() and can use its own local Cmd instance the same
 // way, safe to call from a background thread. Declared here at external linkage
 // (not inside the anonymous namespace below) to match its definition there.
-QHash<QString, PackageInfo> pacmanAvailablePackages(bool *ok = nullptr);
+QHash<QString, PackageInfo> pacmanAvailablePackages(const QStringList &databaseArgs, bool *ok);
 #endif
 
 namespace {
+#ifdef PACKAGE_BACKEND_PACMAN
+QStringList pacmanDatabaseArgs(bool preview)
+{
+    // repo_sync in mxpi-maintenance-pacman creates this database.
+    return preview ? QStringList {"--dbpath", "/run/mx-packageinstaller-pacman"} : QStringList {};
+}
+#endif
+
 constexpr auto MxpiMaintenancePath = "/usr/lib/mx-packageinstaller/mxpi-maintenance";
 
 using MainWindowHelpers::MxpiLibPath;
@@ -2603,14 +2611,18 @@ bool MainWindow::confirmActions(const QString &names, const QString &action)
     qDebug() << "names" << names << "and" << changeList;
 
 #ifdef PACKAGE_BACKEND_PACMAN
-    Q_UNUSED(action);
     // No apt-get -s/aptitude dependency-simulation equivalent on this backend;
     // pacman would need to actually resolve/download to preview what it'd do, so
     // just confirm the explicit selection instead.
     QMessageBox msgBox;
     msgBox.setText("<b>" + tr("The following packages were selected. Click Show Details for list of changes.")
                    + "</b>");
-    msgBox.setInformativeText('\n' + names);
+    if (action == QLatin1String("install")
+        && (currentTree != ui->treeFlatpak || names == QLatin1String("flatpak"))) {
+        msgBox.setInformativeText(tr("Pacman will also perform a full system upgrade.") + "\n\n" + names);
+    } else {
+        msgBox.setInformativeText('\n' + names);
+    }
     msgBox.setDetailedText(changeList.join('\n'));
     msgBox.addButton(QMessageBox::Ok);
     msgBox.addButton(QMessageBox::Cancel);
@@ -2783,10 +2795,21 @@ bool MainWindow::install(const QString &names)
     enableOutput();
 
 #ifdef PACKAGE_BACKEND_PACMAN
+    auto installPacmanPackages = [this](const QStringList &packages) {
+        if (lockFile.isLockedGUI()) {
+            return false;
+        }
+        const bool success = PackageBackend::installPackages(cmd, packages, {});
+        if (!Cmd::elevationDismissed()) {
+            // Even a cancelled transaction may already have synced the live database.
+            updatedOnce = false;
+            enabledList.clear();
+        }
+        return success;
+    };
+
     if (currentTree == ui->treeAUR) {
-        // AUR packages are built unprivileged (makepkg/paru refuse to run as root),
-        // so this never goes through the privileged Cmd::procAsRoot path at all --
-        // no lock check either, since paru/pacman manage their own locking.
+        // Upgrade repository dependencies first, then build AUR packages as the user.
         const QString paruPath = getParuPath();
         if (paruPath.isEmpty()) {
             QMessageBox::critical(this, tr("Error"),
@@ -2797,6 +2820,9 @@ bool MainWindow::install(const QString &names)
             return false;
         }
 
+        if (!installPacmanPackages({})) {
+            return false;
+        }
         QStringList paruArgs {"-S", "--needed"};
         paruArgs += packageArgs(names);
         const bool hasScript = QFile::exists("/usr/bin/script");
@@ -2848,8 +2874,8 @@ bool MainWindow::install(const QString &names)
         }
         return cmd.procWithEnv({{"LANG", "C"}, {"PAGER", "cat"}, {"PARU_PAGER", "cat"}}, paruPath, paruArgs);
     }
-#endif
-
+    return installPacmanPackages(packageArgs(names));
+#else
     if (lockFile.isLockedGUI()) {
         return false;
     }
@@ -2871,6 +2897,7 @@ bool MainWindow::install(const QString &names)
     QStringList backendArgs {recommends};
     backendArgs += extraArgs;
     return PackageBackend::installPackages(cmd, packageArgs(names), backendArgs);
+#endif
 }
 
 // Install a list of application and run postprocess for each of them.
@@ -3310,9 +3337,10 @@ bool MainWindow::downloadPackageList(bool forceDownload)
         // the time the fetch finishes.
         displayPackagesIsRunning = true;
         [[maybe_unused]] auto future = QtConcurrent::run(
-            [this, forceDownload, guardMutex = destructionGuardMutex, destructingFlag = destructing] {
+            [this, forceDownload, databaseArgs = pacmanDatabaseArgs(updatedOnce),
+             guardMutex = destructionGuardMutex, destructingFlag = destructing] {
             bool ok = false;
-            auto loaded = pacmanAvailablePackages(&ok);
+            auto loaded = pacmanAvailablePackages(databaseArgs, &ok);
             QMutexLocker locker(guardMutex.get());
             if (*destructingFlag) {
                 return;
@@ -4208,7 +4236,8 @@ void MainWindow::displayPackageInfo(const QModelIndex &index)
     // No aptitude/dependency-simulation equivalent on this backend; pacman's own
     // info covers the same purpose for the Enabled Repos tab.
     Cmd shell;
-    QString info = shell.getOut({{"LANG", "C"}}, "pacman", {"-Si", "--color", "never", packageName});
+    const auto infoArgs = pacmanDatabaseArgs(updatedOnce) + QStringList {"-Si", "--color", "never", packageName};
+    QString info = shell.getOut({{"LANG", "C"}}, "pacman", infoArgs);
     if (shell.exitStatus() != QProcess::NormalExit || shell.exitCode() != 0 || info.trimmed().isEmpty()) {
         info = shell.getOut({{"LANG", "C"}}, "pacman", {"-Qi", "--color", "never", packageName});
     }
