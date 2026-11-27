@@ -83,6 +83,9 @@ private slots:
     void testVersionDialogReturnsClickedRelease();
     void testHeaderSelectAllChecksVisibleUpgradable();
     void testListLoadKeepsAutoremovableFilter();
+#ifndef PACKAGE_BACKEND_PACMAN
+    void testRemovedPackageUpdatesPopularOnTabSwitch();
+#endif
 #ifdef PACKAGE_BACKEND_PACMAN
     void testEnabledReposRenderedWithoutInstalledFlagFlow();
 #endif
@@ -388,6 +391,33 @@ void TestMainWindowAsync::testListLoadKeepsAutoremovableFilter()
     QVERIFY(window.enabledModel->autoremovableKnown());
 }
 
+#ifndef PACKAGE_BACKEND_PACMAN
+void TestMainWindowAsync::testRemovedPackageUpdatesPopularOnTabSwitch()
+{
+    QCommandLineParser parser;
+    setupTestParser(parser);
+    MainWindow window(parser, nullptr, {}, /*testSkipFlatpakPreload=*/true);
+    window.show();
+    QTRY_VERIFY_WITH_TIMEOUT(window.ui->tabWidget->isTabEnabled(Tab::Test), 60000);
+
+    const QString package = QStringLiteral("mxpi-regression-test-removed-package");
+    window.popularApps = {{.category = "Tests", .name = package, .uninstallNames = package}};
+    window.installedPackages.insert(package, PackageInfo {});
+    window.refreshPopularApps();
+    auto popularApp = [&] { return window.popularModel->getAppData(window.popularModel->findItemByName(package)); };
+    QVERIFY(popularApp() && popularApp()->isInstalled);
+
+    window.ui->tabWidget->setCurrentIndex(Tab::EnabledRepos);
+    QTRY_COMPARE(window.currentTree, window.ui->treeEnabled);
+    window.rebuildPackageViews();
+    QVERIFY(!window.checkInstalled(package));
+    QVERIFY(window.dirtyPopularApps);
+    window.ui->tabWidget->setCurrentIndex(Tab::Popular);
+    QTRY_VERIFY(!window.dirtyPopularApps);
+    QVERIFY(popularApp() && !popularApp()->isInstalled);
+}
+#endif
+
 #ifdef PACKAGE_BACKEND_PACMAN
 // See enabledReposRenderedWithoutInstalled's declaration in mainwindow.h (pacman
 // only): installedPackages ("pacman -Qi") and the Enabled Repos list ("pacman -Ss")
@@ -411,7 +441,13 @@ void TestMainWindowAsync::testEnabledReposRenderedWithoutInstalledFlagFlow()
 {
     QCommandLineParser parser;
     setupTestParser(parser);
-    MainWindow window(parser, nullptr, {}, /*testSkipFlatpakPreload=*/true);
+    // Keep the real startup callback out of displayPackages()'s nested event loop.
+    // This test delivers the snapshot explicitly after checking the first render.
+    auto releasePreload = std::make_shared<QSemaphore>();
+    MainWindow::BackgroundWorkerTestHooks hooks;
+    hooks.beforeGuardCheck = [releasePreload] { releasePreload->acquire(); };
+    MainWindow window(parser, nullptr, hooks, /*testSkipFlatpakPreload=*/true);
+    const auto resumePreload = qScopeGuard([releasePreload] { releasePreload->release(); });
 
     // 1) Rendering the Enabled Repos tab while installedPackages is still empty
     //    (as it plausibly would be while the startup preload is in flight) must

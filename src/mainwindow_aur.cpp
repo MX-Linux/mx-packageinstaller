@@ -66,7 +66,7 @@ bool MainWindow::buildAurList(const QString &searchTerm)
             return true;
         }
         if (installedPackages.isEmpty()) {
-            installedPackages = listInstalled();
+            refreshInstalledPackages();
         }
 
         QHash<QString, QString> aurUpdates;

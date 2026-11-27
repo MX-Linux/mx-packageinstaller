@@ -355,17 +355,13 @@ void MainWindow::setupSnapd()
         const bool ok = install(QStringLiteral("snapd"));
         const QString installOutput = cmd.readAllOutput();
         currentTree = savedTree;
+        refreshInstalledPackages();
         if (operationWasCanceled()) {
             setCursor(QCursor(Qt::ArrowCursor));
             ui->tabWidget->setCurrentWidget(ui->tabSnap);
             enableTabs(true);
             return;
         }
-        // Refresh the in-memory installed-package list BEFORE verifying, otherwise
-        // checkInstalled() still consults the pre-install snapshot and reports a
-        // false "not installed" even though dpkg has just configured snapd.
-        installedPackages = listInstalled();
-        setDirty();
         if (!ok || !checkInstalled(QStringLiteral("snapd"))) {
             setCursor(QCursor(Qt::ArrowCursor));
             showError(tr("snapd was not installed. Click \"Show Details\" for more information."), installOutput);

@@ -542,6 +542,9 @@ MainWindow::MainWindow(const QCommandLineParser &argParser, QWidget *parent)
         QMetaObject::invokeMethod(
             this,
             [this, ok, loaded = std::move(loaded)]() mutable {
+                if (installedSnapshotReloaded) {
+                    return; // A transaction has already replaced the startup snapshot.
+                }
                 if (!ok) {
                     QMessageBox::critical(this, tr("Error"),
                                           tr("The installed-package query returned an error. Please check the log "
@@ -767,6 +770,7 @@ void MainWindow::setup()
     // constructor, right after setup() returns) rather than blocking here.
 #else
     loadPmFiles();
+    refreshInstalledPackages();
     refreshPopularApps();
 #endif
 
@@ -1667,8 +1671,8 @@ void MainWindow::refreshPopularApps()
     ui->searchPopular->clear();
     ui->pushInstall->setEnabled(false);
     ui->pushUninstall->setEnabled(false);
-    installedPackages = listInstalled();
     displayPopularApps();
+    dirtyPopularApps = false;
 }
 
 // Handles duplicate Flatpak entries by adding context to their display names
@@ -3101,7 +3105,6 @@ bool MainWindow::installSelected()
         }
     }
     changeList.clear();
-    installedPackages = listInstalled();
     return result;
 }
 
@@ -3714,16 +3717,23 @@ bool MainWindow::checkUpgradable(const QStringList &nameList) const
     return true;
 }
 
-QHash<QString, PackageInfo> MainWindow::listInstalled()
+void MainWindow::refreshInstalledPackages()
 {
     qDebug() << "+++" << __PRETTY_FUNCTION__ << "+++";
     bool ok = false;
     QHash<QString, PackageInfo> installedPackagesMap = PackageBackend::listInstalled(&ok);
+    setDirty();
     if (!ok) {
         QMessageBox::critical(this, tr("Error"),
                               tr("The installed-package query returned an error. Please check the log for details."));
+        return;
     }
-    return installedPackagesMap;
+    installedPackages = std::move(installedPackagesMap);
+    dirtyPopularApps = true;
+#ifdef PACKAGE_BACKEND_PACMAN
+    installedSnapshotReloaded = true;
+    enabledReposRenderedWithoutInstalled = false; // setDirty() already scheduled the view to be rebuilt.
+#endif
 }
 
 // scope is taken explicitly (not read from the fpUser member) so this can be called
@@ -3771,7 +3781,7 @@ void MainWindow::setDirty()
 
 void MainWindow::rebuildPackageViews()
 {
-    setDirty();
+    refreshInstalledPackages();
     // Rebuild Enabled Repos (temporarily switch currentTree so dirty flag is cleared)
     QTreeView *savedTree = currentTree;
     if (currentTree != ui->treeEnabled) {
@@ -4838,6 +4848,9 @@ void MainWindow::tabWidget_currentChanged(int index)
         setTabsEnabled(false);
         switch (index) {
         case Tab::Popular:
+            if (dirtyPopularApps) {
+                refreshPopularApps();
+            }
             handleTab(searchStr, ui->searchPopular, "", false);
             findPopular(); // ensure proxy filter matches search box (setText may not fire textChanged if text unchanged)
             break;
@@ -5154,6 +5167,7 @@ void MainWindow::installFlatpak()
     showOutput();
     displayFlatpaksIsRunning = true;
     install("flatpak");
+    refreshInstalledPackages();
     if (operationWasCanceled()) {
         displayFlatpaksIsRunning = false;
         blockInterfaceFP();
@@ -5162,8 +5176,6 @@ void MainWindow::installFlatpak()
         currentTree->blockSignals(false);
         return;
     }
-    installedPackages = listInstalled();
-    setDirty();
     buildPackageLists();
     if (!checkInstalled("flatpak")) {
         QMessageBox::critical(this, tr("Flatpak not installed"), tr("Flatpak was not installed"));

@@ -236,6 +236,7 @@ private:
 
     QString indexFilterFP;
     bool cleanupDone {false};
+    bool dirtyPopularApps {true};
     bool dirtyBackports {true};
     bool dirtyEnabledRepos {true};
     bool dirtyTest {true};
@@ -253,6 +254,7 @@ private:
     bool warningFlatpaks {false};
     bool warningTest {false};
 #ifdef PACKAGE_BACKEND_PACMAN
+    bool installedSnapshotReloaded {false};
     bool warningAur {false};
     // pacman -Qtdq is fast on its own, but running it automatically as part of
     // the very first package-list display adds one more synchronous subprocess
@@ -426,7 +428,7 @@ private:
     void showInfoBox(const QString &text, bool richText);
     QNetworkReply *activeDownloadReply {nullptr};
 
-    [[nodiscard]] QHash<QString, PackageInfo> listInstalled();
+    void refreshInstalledPackages();
     [[nodiscard]] QString categoryTranslation(const QString &item);
     [[nodiscard]] QString getMXTestRepoUrl();
     [[nodiscard]] QString getArchOption() const;
