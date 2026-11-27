@@ -37,6 +37,7 @@
 #include <QStringList>
 
 #include <cstdio>
+#include <sys/types.h>
 
 namespace HelperEngine
 {
@@ -94,4 +95,6 @@ void writeAndFlush(FILE *stream, const QByteArray &data);
 // (including a symlink), so a pre-planted marker aborts the operation rather
 // than letting a root-owned write follow an attacker-controlled path.
 [[nodiscard]] bool createMarker(const QString &path);
+// The maintenance action supplies fixed source and destination paths.
+[[nodiscard]] bool archiveLog(const QStringList &sources, uid_t owner, const QString &destination);
 } // namespace HelperEngine

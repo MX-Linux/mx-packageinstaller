@@ -27,6 +27,8 @@
 #include <QElapsedTimer>
 #include <QFile>
 #include <QFileInfo>
+#include <QLockFile>
+#include <QTemporaryFile>
 #include <QProcessEnvironment>
 #include <QRegularExpression>
 #include <QSocketNotifier>
@@ -428,5 +430,104 @@ bool createMarker(const QString &path)
         return false;
     }
     return true;
+}
+namespace
+{
+constexpr qint64 logLimit = 1024 * 1024;
+constexpr qint64 historyLimit = 5 * logLimit;
+
+enum class ReadResult { Read, Missing, Failed };
+
+ReadResult readLogTail(const QString &path, uid_t owner, qint64 limit, QByteArray &data, struct stat &info)
+{
+    const int fd = ::open(QFile::encodeName(path).constData(), O_RDONLY | O_NOFOLLOW | O_NONBLOCK | O_NOCTTY | O_CLOEXEC);
+    if (fd < 0) {
+        return errno == ENOENT || errno == ELOOP ? ReadResult::Missing : ReadResult::Failed;
+    }
+    QFile file;
+    if (!file.open(fd, QIODevice::ReadOnly | QIODevice::Unbuffered, QFileDevice::AutoCloseHandle)) {
+        ::close(fd);
+        return ReadResult::Failed;
+    }
+    if (::fstat(fd, &info) != 0) {
+        return ReadResult::Failed;
+    }
+    if (!S_ISREG(info.st_mode) || info.st_uid != owner) {
+        return ReadResult::Missing;
+    }
+    const qint64 length = qMin<qint64>(info.st_size, limit);
+    if (!file.seek(info.st_size - length)) {
+        return ReadResult::Failed;
+    }
+    data = file.read(length);
+    return file.error() == QFileDevice::NoError ? ReadResult::Read : ReadResult::Failed;
+}
+
+bool publishLog(const QString &path, const QByteArray &data, mode_t mode)
+{
+    QTemporaryFile temp(path + ".XXXXXX");
+    if (!temp.open() || temp.write(data) != data.size() || !temp.flush()
+        || ::fchmod(temp.handle(), mode & 0644) != 0 || ::fsync(temp.handle()) != 0) {
+        return false;
+    }
+    // POSIX rename atomically replaces even a legacy symlink at the destination.
+    return ::rename(QFile::encodeName(temp.fileName()).constData(), QFile::encodeName(path).constData()) == 0;
+}
+} // namespace
+
+bool archiveLog(const QStringList &sources, uid_t owner, const QString &destination)
+{
+    QLockFile lock(destination + ".lock");
+    if (!lock.tryLock(5000)) {
+        return false;
+    }
+    for (const QString &source : sources) {
+        struct stat sourceInfo {};
+        QByteArray data;
+        const auto result = readLogTail(source, owner, logLimit, data, sourceInfo);
+        if (result == ReadResult::Missing) {
+            continue;
+        }
+        if (result == ReadResult::Failed) {
+            return false;
+        }
+
+        struct stat previousInfo {};
+        QByteArray previous;
+        const auto previousResult = readLogTail(destination, geteuid(), logLimit, previous, previousInfo);
+        if (previousResult == ReadResult::Failed) {
+            return false;
+        }
+        if (previousResult == ReadResult::Read) {
+            const QString historyPath = destination + ".old";
+            const QByteArray separator = "-----------------------------------------------------------\nMXPI SESSION\n"
+                                         "-----------------------------------------------------------\n\n";
+            QByteArray history;
+            struct stat historyInfo {};
+            const auto historyResult = readLogTail(historyPath, geteuid(), historyLimit - separator.size() - previous.size(),
+                                                   history, historyInfo);
+            if (historyResult == ReadResult::Failed
+                || !publishLog(historyPath, history + separator + previous,
+                               previousInfo.st_mode & (historyResult == ReadResult::Read ? historyInfo.st_mode : 0644))) {
+                return false;
+            }
+        }
+        if (!publishLog(destination, data, sourceInfo.st_mode)) {
+            return false;
+        }
+
+        // Unlink with the caller's permissions, and leave any replacement session log alone.
+        const uid_t privilegedUid = geteuid();
+        if (::seteuid(owner) != 0) {
+            return false;
+        }
+        struct stat current {};
+        const QByteArray path = QFile::encodeName(source);
+        const bool removed = ::lstat(path.constData(), &current) != 0 ? errno == ENOENT
+                             : current.st_dev != sourceInfo.st_dev || current.st_ino != sourceInfo.st_ino
+                                   || ::unlink(path.constData()) == 0;
+        return ::seteuid(privilegedUid) == 0 && removed;
+    }
+    return false;
 }
 } // namespace HelperEngine

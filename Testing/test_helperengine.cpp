@@ -29,6 +29,8 @@ private slots:
     void markerCreationRejectsPreexistingPath();
     void markerCreationRejectsSymlink();
     void markerPathValidation();
+    void archiveKeepsBoundedTails();
+    void archiveRequiresOwnedRegularFile();
 };
 
 namespace
@@ -170,6 +172,52 @@ void HelperEngineTest::markerPathValidation()
     qputenv("PKEXEC_UID", "not-a-number");
     QVERIFY(!isValidMarkerPath(QStringLiteral("/run/user/not-a-number/mx-pkg-helper-ok.marker")));
     qunsetenv("PKEXEC_UID");
+}
+
+void HelperEngineTest::archiveKeepsBoundedTails()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString src = dir.filePath("session");
+    const QString dest = dir.filePath("current");
+    constexpr qsizetype mib = 1024 * 1024;
+    auto write = [](const QString &path, const QByteArray &contents) {
+        QFile file(path);
+        return file.open(QIODevice::WriteOnly) && file.write(contents) == contents.size() && file.flush();
+    };
+    const QByteArray tail(mib, 's');
+    QVERIFY(write(src, "discard" + tail));
+    QVERIFY(write(dest, "previous"));
+    QVERIFY(write(dest + ".old", QByteArray(5 * mib, 'h')));
+    QVERIFY(archiveLog({src}, geteuid(), dest));
+    QVERIFY(!QFileInfo::exists(src));
+    QFile current(dest);
+    QVERIFY(current.open(QIODevice::ReadOnly));
+    QCOMPARE(current.readAll(), tail);
+    QFile history(dest + ".old");
+    QVERIFY(history.open(QIODevice::ReadOnly));
+    QCOMPARE(history.size(), 5 * mib);
+    QVERIFY(history.readAll().endsWith("previous"));
+}
+
+void HelperEngineTest::archiveRequiresOwnedRegularFile()
+{
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    QFile source(dir.filePath("session"));
+    QVERIFY(source.open(QIODevice::WriteOnly));
+    QCOMPARE(source.write("session"), 7);
+    source.close();
+    const QString link = dir.filePath("link");
+    QVERIFY(source.link(link));
+    const QString dest = dir.filePath("current");
+    QVERIFY(!archiveLog({link}, geteuid(), dest));
+    QVERIFY(!archiveLog({source.fileName()}, geteuid() == 0 ? 1 : 0, dest));
+    QVERIFY(!QFileInfo::exists(dest));
+    // Replacing a legacy destination link also leaves the linked file intact.
+    QVERIFY(QFile::link(source.fileName(), dest));
+    QVERIFY(archiveLog({source.fileName()}, geteuid(), dest));
+    QVERIFY(!QFileInfo(dest).isSymLink());
 }
 
 QTEST_GUILESS_MAIN(HelperEngineTest)

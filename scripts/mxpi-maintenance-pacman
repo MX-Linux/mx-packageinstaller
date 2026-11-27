@@ -6,20 +6,21 @@
 # what belongs here (narrow, non-trust-mutating actions) versus in mxpi-lib
 # (auth_admin_keep-gated, for anything that adds trusted sources or enables services).
 
-if [[ $# -ge 2 && "$1" == "--marker" ]]; then
-    marker="$2"
-    # HELPER_INSTALL_DIR (and so the helper's install path) differs by packaging
-    # backend -- Debian/MX installs it to /usr/libexec, the Arch package/AUR PKGBUILD
-    # to /usr/lib -- so probe both rather than hardcoding one, which has broken this
-    # exact check twice before when the install location changed underneath it.
-    helper=""
+run_helper() {
+    local candidate
     for candidate in /usr/libexec/mx-packageinstaller/helper /usr/lib/mx-packageinstaller/helper; do
         if [[ -x "$candidate" ]]; then
-            helper="$candidate"
-            break
+            "$candidate" "$@"
+            return $?
         fi
     done
-    if [[ -z "$helper" ]] || ! "$helper" create-marker "$marker"; then
+    echo "mxpi-maintenance: helper is missing" >&2
+    return 1
+}
+
+if [[ $# -ge 2 && "$1" == "--marker" ]]; then
+    marker="$2"
+    if ! run_helper create-marker "$marker"; then
         echo "mxpi-maintenance: could not create authentication marker" >&2
         exit 1
     fi
@@ -32,87 +33,12 @@ repo_sync() {
     install -d -m 0755 -- "$db" && pacman --dbpath "$db" --logfile /dev/null -Sy --noconfirm
 }
 
-# Rotates (truncates to its last $2 bytes) $1 if it's currently longer than
-# that -- a no-op otherwise, so calling this unconditionally is cheap. Only
-# ever called on copy_log's $dest/$old, both root-owned paths under /var/log
-# (not attacker-writable), so this carries none of the symlink-race risk
-# $src's copy in copy_log() guards against.
-rotate_if_oversized() {
-    local file="$1" maxBytes="$2" size
-    [[ -f "$file" && ! -L "$file" ]] || return 0
-    size=$(stat -c%s -- "$file" 2>/dev/null) || return 0
-    (( size > maxBytes )) || return 0
-    tail -c "$maxBytes" -- "$file" > "${file}.tmp" && mv -f -- "${file}.tmp" "$file"
-}
-
-copy_log() {
-    local src dest="/var/log/mxpi.log" old="/var/log/mxpi.log.old" uid dir
-    local -a logdirs=()
-    # This action is deliberately passwordless (see the file header) so the app
-    # can copy its own diagnostic log out on close/crash without a prompt --
-    # that means the caller's log content (which they fully control) must never
-    # be trusted to bound its own size. Rotate $dest and $old whenever either
-    # grows past its cap, so this can't be looped -- or fed an oversized
-    # source -- to grow a root-owned file without bound.
-    local -r maxLogBytes=1048576 maxOldBytes=5242880
-    # Where the app wrote its log (see Log::defaultLogPath): a GUI run logs to
-    # the caller's private runtime dir (/run/user/<uid>); a root run logs to
-    # /run. Both are non-world-writable, unlike the legacy /tmp fallback.
-    # The caller's uid may come from pkexec, sudo, or the login session.
-    if [[ "$PKEXEC_UID" =~ ^[0-9]+$ ]]; then
-        uid="$PKEXEC_UID"
-    elif [[ "$SUDO_UID" =~ ^[0-9]+$ ]]; then
-        uid="$SUDO_UID"
-    else
-        uid=$(id -u "$(logname)" 2>/dev/null)
-    fi
-    [[ "$uid" =~ ^[0-9]+$ && "$uid" -ne 0 ]] && logdirs+=("/run/user/${uid}")
-    logdirs+=("/run" "/tmp")
-    for dir in "${logdirs[@]}"; do
-        [[ -d "$dir" ]] || continue
-        src="${dir}/mxpi.log"
-        # Only act on a real regular file, never a symlink, so an attacker
-        # cannot redirect this helper at a root-owned file.
-        [[ -f "$src" && ! -L "$src" ]] || continue
-        # Archive the previous session's log, but never follow a symlink that
-        # an earlier run might have left at the destination.
-        if [[ -f "$dest" && ! -L "$dest" ]]; then
-            # Rotate an oversized dest down first, so one big session can't
-            # blow straight past $old's own cap in a single archive step.
-            rotate_if_oversized "$dest" "$maxLogBytes"
-            {
-                printf -- '-----------------------------------------------------------\nMXPI SESSION\n-----------------------------------------------------------\n\n'
-                cat -- "$dest"
-            } >> "$old"
-            # Bound the archive's total size regardless of how many sessions
-            # -- or how many times this passwordless action has been invoked
-            # -- have been appended to it: keep only the most recent bytes.
-            rotate_if_oversized "$old" "$maxOldBytes"
-        fi
-        # Drop any pre-existing destination (a regular file, or a symlink an
-        # earlier race may have planted here) so the copy below always creates
-        # a fresh regular file: cp -P guards the source but still follows a
-        # symlink at the destination, which would let it write through to an
-        # arbitrary root-owned target.
-        rm -f -- "$dest"
-        # Copy the content into a fresh regular file (-P: if the source is
-        # swapped for a symlink in a race, copy the link itself rather than its
-        # target), then remove the source.
-        cp -Pf -- "$src" "$dest" && rm -f -- "$src"
-        # Cap a single copy to at most maxLogBytes. A raced symlink source
-        # above would have left $dest as a symlink via cp -P, which
-        # rotate_if_oversized's own "! -L" check skips over harmlessly.
-        rotate_if_oversized "$dest" "$maxLogBytes"
-        return 0
-    done
-}
-
 main() {
 case "$1" in
     repo_sync)
         repo_sync;;
     copy_log)
-        copy_log;;
+        run_helper archive-log;;
     *)
         echo "mxpi-maintenance: unknown action '$1'" >&2
         exit 1;;

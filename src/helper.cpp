@@ -35,6 +35,8 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <limits>
+#include <unistd.h>
 
 using namespace HelperEngine;
 
@@ -335,6 +337,23 @@ int main(int argc, char *argv[])
         return handleWriteFile(remainingArgs);
     }
 #endif
+    if (action == QLatin1String("archive-log") && remainingArgs.isEmpty()) {
+        const auto caller = qEnvironmentVariable("PKEXEC_UID", qEnvironmentVariable("SUDO_UID", QString::number(getuid())));
+        bool ok = false;
+        const uint uid = caller.toUInt(&ok);
+        if (!ok || uid == std::numeric_limits<uid_t>::max()) {
+            printError(QStringLiteral("Invalid caller uid"));
+            return 1;
+        }
+        const QStringList sources = uid == 0 ? QStringList {"/run/mxpi.log"}
+                                             : QStringList {QStringLiteral("/run/user/%1/mxpi.log").arg(uid),
+                                                            "/tmp/mxpi.log"};
+        if (!archiveLog(sources, uid, QStringLiteral("/var/log/mxpi.log"))) {
+            printError(QStringLiteral("Could not archive the session log"));
+            return 1;
+        }
+        return 0;
+    }
     if (action == QLatin1String("create-marker")) {
         if (remainingArgs.size() != 1) {
             printError(QStringLiteral("create-marker requires exactly one path"));

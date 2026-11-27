@@ -3633,7 +3633,13 @@ void MainWindow::cleanup()
         updateApt();
     }
     Cmd helperCmd;
-    runMxpiMaintenanceAsRoot(helperCmd, QStringLiteral("copy_log"));
+    if (getuid() == 0) {
+        // A GUI started through sudo or pkexec writes its own root-owned log in /run.
+        helperCmd.procWithEnv({{"PKEXEC_UID", "0"}}, MxpiMaintenancePath, {"copy_log"}, nullptr, nullptr,
+                              Cmd::QuietMode::Yes);
+    } else {
+        runMxpiMaintenanceAsRoot(helperCmd, QStringLiteral("copy_log"));
+    }
     settings.setValue("geometry", saveGeometry());
     settings.setValue("FlatpakRemote", ui->comboRemote->currentText());
     settings.setValue("FlatpakUser",
