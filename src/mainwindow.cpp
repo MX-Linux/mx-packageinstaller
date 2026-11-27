@@ -2904,7 +2904,6 @@ bool MainWindow::install(const QString &names)
 bool MainWindow::installBatch(const QStringList &nameList)
 {
     qDebug() << "+++" << __PRETTY_FUNCTION__ << "+++";
-    bool result = true;
     QStringList postinstallHooks;
     QString installNames;
 
@@ -2919,10 +2918,8 @@ bool MainWindow::installBatch(const QStringList &nameList)
         }
     }
 
-    if (!installNames.isEmpty()) {
-        if (!install(installNames)) {
-            result = false;
-        }
+    if (!installNames.isEmpty() && !install(installNames)) {
+        return false;
     }
     if (operationWasCanceled()) {
         return false;
@@ -2935,17 +2932,14 @@ bool MainWindow::installBatch(const QStringList &nameList)
             return false;
         }
         enableOutput();
-        if (!runHooksAsRoot(cmd, postinstallHooks)) {
-            result = false;
-        }
+        return runHooksAsRoot(cmd, postinstallHooks);
     }
-    return result;
+    return true;
 }
 
 bool MainWindow::installPopularApp(const QString &name)
 {
     qDebug() << "+++" << __PRETTY_FUNCTION__ << "+++";
-    bool result = true;
     QString preinstall;
     QString postinstall;
     QString installNames;
@@ -2983,7 +2977,9 @@ bool MainWindow::installPopularApp(const QString &name)
     // Install
     if (!installNames.isEmpty()) {
         ui->tabWidget->setTabText(Tab::Output, tr("Installing ") + name);
-        result = install(installNames);
+        if (!install(installNames)) {
+            return false;
+        }
     }
     if (operationWasCanceled()) {
         return false;
@@ -2996,11 +2992,9 @@ bool MainWindow::installPopularApp(const QString &name)
         if (lockFile.isLockedGUI()) {
             return false;
         }
-        if (!cmd.runHookAsRoot(postinstall)) {
-            result = false;
-        }
+        return cmd.runHookAsRoot(postinstall);
     }
-    return result;
+    return true;
 }
 
 bool MainWindow::installPopularApps()
