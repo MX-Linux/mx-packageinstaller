@@ -1223,37 +1223,44 @@ void MainWindow::updateInterface()
 
 uchar MainWindow::getDebianVerNum()
 {
+#ifdef MXPI_TESTING
+    QFile file {":/fixtures/debian_version"};
+#else
     QFile file {"/etc/debian_version"};
+#endif
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qCritical() << "Could not open /etc/debian_version:" << file.errorString();
+        qCritical() << "Could not open" << file.fileName() << file.errorString();
         return showVersionDialog(tr("Could not determine Debian version. Please select your version:"));
     }
 
     QTextStream in(&file);
-    const QString version = in.readLine().split('/').at(0); // Handle cases like "bookworm/sid"
+    const QString line = in.readLine();
     file.close();
+    if (const uchar version = parseDebianVersion(line)) {
+        return version;
+    }
+    qCritical() << "Unknown Debian version:" << line;
+    return showVersionDialog(tr("Could not determine Debian version. Please select your version:"));
+}
 
+uchar MainWindow::parseDebianVersion(const QString &line)
+{
+    const QString version = line.section('/', 0, 0); // e.g. "forky/sid"
     // First try parsing as numeric version
     bool ok = false;
     const int numericVer = version.split('.').at(0).toInt(&ok);
     if (ok) {
-        return numericVer;
+        return (numericVer >= Release::Bookworm && numericVer <= Release::Forky) ? numericVer : 0;
     }
 
     // Then try matching codename
     const QString codename = version.toLower();
-    if (codename == QLatin1String("bullseye")) {
-        return Release::Bullseye;
+    for (const auto release : {Release::Bookworm, Release::Trixie, Release::Forky}) {
+        if (codename == getDebianVerName(release)) {
+            return release;
+        }
     }
-    if (codename == QLatin1String("bookworm")) {
-        return Release::Bookworm;
-    }
-    if (codename == QLatin1String("trixie")) {
-        return Release::Trixie;
-    }
-
-    qCritical() << "Unknown Debian version:" << version;
-    return showVersionDialog(tr("Could not determine Debian version. Please select your version:"));
+    return 0;
 }
 
 uchar MainWindow::showVersionDialog(const QString &message)
@@ -1263,6 +1270,7 @@ uchar MainWindow::showVersionDialog(const QString &message)
     msgBox.setText(message);
     const QAbstractButton *bookwormButton = msgBox.addButton("Bookworm", QMessageBox::AcceptRole);
     msgBox.addButton("Trixie", QMessageBox::AcceptRole);
+    const QAbstractButton *forkyButton = msgBox.addButton("Forky", QMessageBox::AcceptRole);
     const QAbstractButton *cancelButton = msgBox.addButton(QMessageBox::Cancel);
     msgBox.show();
 
@@ -1273,18 +1281,17 @@ uchar MainWindow::showVersionDialog(const QString &message)
     if (msgBox.clickedButton() == cancelButton) {
         exit(EXIT_FAILURE);
     }
+    if (msgBox.clickedButton() == forkyButton) {
+        return Release::Forky;
+    }
     return msgBox.clickedButton() == bookwormButton ? Release::Bookworm : Release::Trixie;
 }
 
 QString MainWindow::getDebianVerName(uchar version)
 {
-    if (version == 0) {
-        version = getDebianVerNum();
-    }
     static const std::map<uchar, QString> versionMap
-        = {{Release::Jessie, QStringLiteral("jessie")},     {Release::Stretch, QStringLiteral("stretch")},
-           {Release::Buster, QStringLiteral("buster")},     {Release::Bullseye, QStringLiteral("bullseye")},
-           {Release::Bookworm, QStringLiteral("bookworm")}, {Release::Trixie, QStringLiteral("trixie")}};
+        = {{Release::Bookworm, QStringLiteral("bookworm")}, {Release::Trixie, QStringLiteral("trixie")},
+           {Release::Forky, QStringLiteral("forky")}};
 
     if (const auto it = versionMap.find(version); it != versionMap.end()) {
         return it->second;

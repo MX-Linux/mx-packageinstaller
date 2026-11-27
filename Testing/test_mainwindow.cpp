@@ -81,6 +81,7 @@ private slots:
     void testFlatpakGenerationStaleness();
     void testFlatpakPreloadPreservesOtherSelections();
     void testMarkKeepFollowsCurrentTabFilter();
+    void testDebianReleaseDetection();
     void testVersionDialogReturnsClickedRelease();
     void testHeaderSelectAllChecksVisibleUpgradable();
     void testListLoadKeepsAutoremovableFilter();
@@ -299,6 +300,26 @@ void TestMainWindowAsync::testMarkKeepFollowsCurrentTabFilter()
     QCOMPARE(window.ui->pushInstall->text(), MainWindow::tr("Mark keep"));
 }
 
+void TestMainWindowAsync::testDebianReleaseDetection()
+{
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("8.11")), 0);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("9.13")), 0);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("10.13")), 0);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("buster/sid")), 0);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("11.11")), 0);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("bullseye/sid")), 0);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("bookworm")), 12);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("12.0")), 12);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("forky")), 14);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("forky/sid")), 14);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("14.0")), 14);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("15.0")), 0);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("268")), 0);
+    QCOMPARE(MainWindow::parseDebianVersion(QStringLiteral("duke")), 0);
+    QCOMPARE(MainWindow::getDebianVerNum(), 14); // Bundled forky/sid fixture
+    QCOMPARE(MainWindow::getDebianVerName(14), QStringLiteral("forky"));
+}
+
 // The Debian version picker (shown when /etc/debian_version is unreadable or holds
 // an unknown codename) must return the release whose button was clicked.
 // QMessageBox::exec() returns an opaque code for custom buttons -- since Qt 6.5 not
@@ -325,6 +346,7 @@ void TestMainWindowAsync::testVersionDialogReturnsClickedRelease()
     };
     QCOMPARE(pick(QStringLiteral("Bookworm")), static_cast<int>(Release::Bookworm));
     QCOMPARE(pick(QStringLiteral("Trixie")), static_cast<int>(Release::Trixie));
+    QCOMPARE(pick(QStringLiteral("Forky")), static_cast<int>(Release::Forky));
 }
 
 // On every package tab the Upgradable filter shows the header checkbox, and toggling

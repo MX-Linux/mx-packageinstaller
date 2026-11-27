@@ -78,7 +78,7 @@ enum { Popular, EnabledRepos, AUR, Test, Backports, Flatpak, Snap, Output };
 
 namespace Release
 {
-enum { Jessie = 8, Stretch, Buster, Bullseye, Bookworm, Trixie };
+enum { Bookworm = 12, Trixie, Forky };
 }
 
 struct PopularInfo {
@@ -442,8 +442,9 @@ private:
     [[nodiscard]] bool checkUpgradable(const QStringList &nameList) const;
     [[nodiscard]] bool isOnline();
     [[nodiscard]] bool isPackageInstallable(const QString &installable, const QString &modArch) const;
-    [[nodiscard]] static QString getDebianVerName(uchar version = 0);
+    [[nodiscard]] static QString getDebianVerName(uchar version);
     [[nodiscard]] static uchar getDebianVerNum();
+    [[nodiscard]] static uchar parseDebianVersion(const QString &line);
     [[nodiscard]] static uchar showVersionDialog(const QString &message);
     [[nodiscard]] QVector<PackageData> createPackageDataList(QHash<QString, PackageInfo> *list) const;
 

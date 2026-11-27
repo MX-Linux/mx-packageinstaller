@@ -402,6 +402,10 @@ else()
 endif()
 
 add_executable(test_mainwindow ${MAINWINDOW_TEST_SOURCES})
+qt_add_resources(test_mainwindow "debian_release_fixture"
+    PREFIX "/"
+    FILES fixtures/debian_version
+)
 
 # AUTOUIC resolves the "ui_mainwindow.h" that test_mainwindow.cpp includes by
 # searching for mainwindow.ui relative to this directory (Testing/), not the
