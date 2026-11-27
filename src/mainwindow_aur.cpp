@@ -45,6 +45,7 @@ bool MainWindow::buildAurList(const QString &searchTerm)
         return false;
     }
 
+    const QHash<QString, QString> queryLocale {{"LANG", "C"}, {"LC_ALL", "C"}};
     Cmd shell;
     QScopedValueRollback<bool> guard(suppressCmdOutput, true);
     // "pacman -Qm" and "paru -Ss" exit 1 when nothing matches. With no output at all
@@ -58,7 +59,7 @@ bool MainWindow::buildAurList(const QString &searchTerm)
     };
     if (term.isEmpty()) {
         const QStringList installed
-            = shell.getOut({{"LANG", "C"}}, "pacman", {"-Qm", "--color", "never"}).split('\n', Qt::SkipEmptyParts);
+            = shell.getOut(queryLocale, "pacman", {"-Qm", "--color", "never"}).split('\n', Qt::SkipEmptyParts);
         if (queryFailed(installed)) {
             return false;
         }
@@ -71,7 +72,7 @@ bool MainWindow::buildAurList(const QString &searchTerm)
 
         QHash<QString, QString> aurUpdates;
         const QStringList updates
-            = shell.getOut({{"LANG", "C"}}, paruPath, {"-Qua", "--color", "never"}).split('\n', Qt::SkipEmptyParts);
+            = shell.getOut(queryLocale, paruPath, {"-Qua", "--color", "never"}).split('\n', Qt::SkipEmptyParts);
         if (shell.exitStatus() == QProcess::NormalExit && shell.exitCode() == 0) {
             for (const QString &line : updates) {
                 const QString name = line.section(' ', 0, 0).trimmed();
@@ -98,7 +99,7 @@ bool MainWindow::buildAurList(const QString &searchTerm)
         return false;
     }
     // --aur: plain "-Ss" also searches the sync repos and lists their matches first.
-    QStringList results = shell.getOut({{"LANG", "C"}}, paruPath, {"-Ssq", "--aur", "--color", "never", term})
+    QStringList results = shell.getOut(queryLocale, paruPath, {"-Ssq", "--aur", "--color", "never", term})
                               .split('\n', Qt::SkipEmptyParts);
     if (queryFailed(results)) {
         return false;
@@ -113,7 +114,7 @@ bool MainWindow::buildAurList(const QString &searchTerm)
 
     QStringList infoArgs {"-Si", "--aur", "--color", "never"};
     infoArgs += results;
-    const QString infoOutput = shell.getOut({{"LANG", "C"}}, paruPath, infoArgs);
+    const QString infoOutput = shell.getOut(queryLocale, paruPath, infoArgs);
     if (shell.exitStatus() != QProcess::NormalExit || shell.exitCode() != 0 || infoOutput.trimmed().isEmpty()) {
         for (const QString &name : std::as_const(results)) {
             aurList.insert(name, {QString(), QString()});
